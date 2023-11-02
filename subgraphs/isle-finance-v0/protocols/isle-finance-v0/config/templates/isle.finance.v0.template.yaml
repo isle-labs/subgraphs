@@ -34,7 +34,7 @@ dataSources:
           handler: handleTransfer
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
-    name: PoolAddressesProvider
+    name: PoolAddressesProvider 
     network: {{ network }}
     source:
       abi: PoolAddressesProvider
@@ -55,49 +55,10 @@ dataSources:
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:
-        - event: AddressSet(indexed bytes32,indexed address,indexed address)
-          handler: handleAddressSet
-        - event: AddressSetAsProxy(indexed bytes32,indexed address,address,indexed address)
-          handler: handleAddressSetAsProxy
-        - event: IsleGlobalsUpdated(indexed address,indexed address)
-          handler: handleIsleGlobalsUpdated
-        - event: LoanManagerUpdated(indexed address,indexed address)
-          handler: handleLoanManagerUpdated
-        - event: MarketIdSet(indexed string,indexed string)
-          handler: handleMarketIdSet
-        - event: PoolConfiguratorUpdated(indexed address,indexed address)
-          handler: handlePoolConfiguratorUpdated
         - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
           handler: handleProxyCreated
-        - event: WithdrawalManagerUpdated(indexed address,indexed address)
-          handler: handleWithdrawalManagerUpdated
       file: ./protocols/isle-finance-v0/src/mapping.ts
 templates:
-  - kind: ethereum/contract	
-    name: WithdrawalManager
-    network: {{ network }}
-    source:
-      abi: WithdrawalManager
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities: []
-      abis:
-        - name: WithdrawalManager
-          file: ./abis/WithdrawalManager.json
-        - name: LoanManager
-          file: ./abis/LoanManager.json
-        - name: PoolConfigurator
-          file: ./abis/PoolConfigurator.json
-      eventHandlers:
-        - event: WithdrawalCancelled(indexed address)
-          handler: handleWithdrawalCancelled
-        - event: WithdrawalProcessed(indexed address,uint256,uint256)
-          handler: handleWithdrawalProcessed
-        - event: WithdrawalUpdated(indexed address,uint256,uint64,uint64)
-          handler: handleWithdrawalUpdated
-      file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: LoanManager
     network: {{ network }}
@@ -233,4 +194,29 @@ templates:
         handler: handleDeposit
       - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
         handler: handleWithdraw
+      file: ./protocols/isle-finance-v0/src/mapping.ts
+  - kind: ethereum/contract	
+    name: WithdrawalManager
+    network: {{ network }}
+    source:
+      abi: WithdrawalManager
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities: []
+      abis:
+        - name: WithdrawalManager
+          file: ./abis/WithdrawalManager.json
+        - name: LoanManager
+          file: ./abis/LoanManager.json
+        - name: PoolConfigurator
+          file: ./abis/PoolConfigurator.json
+      eventHandlers:
+        - event: WithdrawalCancelled(indexed address)
+          handler: handleWithdrawalCancelled
+        - event: WithdrawalProcessed(indexed address,uint256,uint256)
+          handler: handleWithdrawalProcessed
+        - event: WithdrawalUpdated(indexed address,uint256,uint64,uint64)
+          handler: handleWithdrawalUpdated
       file: ./protocols/isle-finance-v0/src/mapping.ts

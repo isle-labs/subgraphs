@@ -1032,14 +1032,6 @@ type Market @entity @regularPolling {
 
   ##### Helpers #####
 
-  " Total amount of cover (in USD) "
-  _cover: BigInt # different from example's BigDecimal
-  " Minimum amount required of cover (in USD)"
-  _minCover: BigDecimal
-
-  " Address to the current pool addresses provider contract "
-  _poolAddressesProvider: Bytes!
-
   " Address to the current pool configurator contract "
   _poolConfigurator: Bytes!
 

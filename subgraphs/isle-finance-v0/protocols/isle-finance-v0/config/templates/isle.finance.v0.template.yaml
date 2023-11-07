@@ -11,6 +11,29 @@ graft:
 {{/graftEnabled}}
 dataSources:
   - kind: ethereum/contract
+    name: IsleGlobals
+    network: {{ network }}
+    source:
+      address: "{{ IsleGlobals.address }}"
+      abi: IsleGlobals
+      startBlock: {{ IsleGlobals.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities: []
+      abis:
+        - name: IsleGlobals
+          file: ./abis/IsleGlobals.json
+      eventHandlers:
+        - event: ContractPausedSet(indexed address,indexed address,bool)
+          handler: handleContractPausedSet
+        - event: ProtocolFeeSet(uint24)
+          handler: handleProtocolFeeSet
+        - event: ProtocolPausedSet(indexed address,bool)
+          handler: handleProtocolPausedSet
+      file: ./protocols/isle-finance-v0/src/mapping.ts
+  - kind: ethereum/contract
     name: Receivable
     network: {{ network }}
     source:
@@ -30,8 +53,6 @@ dataSources:
           handler: handleAssetBurned
         - event: AssetCreated(indexed address,indexed address,indexed uint256,uint256,uint256)
           handler: handleAssetCreated
-        - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransfer
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: PoolAddressesProvider 
@@ -83,6 +104,9 @@ templates:
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:
+        - event: PaymentAdded(indexed uint16,indexed
+            uint256,uint256,uint256,uint256,uint256,uint256)
+          handler: handlePaymentAdded
         - event: AccountingStateUpdated(uint256,uint112)
           handler: handleAccountingStateUpdated
         - event: FeesPaid(indexed uint16,uint256,uint256)
@@ -93,17 +117,10 @@ templates:
           handler: handleFundsWithdrawn
         - event: ImpairmentRemoved(indexed uint16,uint256)
           handler: handleImpairmentRemoved
-        - event: IssuanceParamsUpdated(indexed uint48,uint256,uint112)
-          handler: handleIssuanceParamsUpdated
         - event: LoanImpaired(indexed uint16,uint256)
           handler: handleLoanImpaired
         - event: LoanRepaid(indexed uint16,uint256,uint256)
           handler: handleLoanRepaid
-        - event: LoanRequested(indexed uint16)
-          handler: handleLoanRequested
-        - event: PaymentAdded(indexed uint16,indexed
-            uint256,uint256,uint256,uint256,uint256,uint256)
-          handler: handlePaymentAdded
         - event: PaymentRemoved(indexed uint16,indexed uint256)
           handler: handlePaymentRemoved
         - event: PrincipalOutUpdated(uint128)
@@ -143,8 +160,6 @@ templates:
           handler: handleCoverWithdrawn
         - event: Initialized(indexed address,indexed address,address)
           handler: handleInitialized
-        - event: MaxCoverLiquidationSet(uint24)
-          handler: handleMaxCoverLiquidationSet
         - event: MinCoverSet(uint104)
           handler: handleMinCoverSet
         - event: OpenToPublicSet(bool)
@@ -181,15 +196,9 @@ templates:
           file: ./abis/ERC20NameBytes.json
         - name: ERC20SymbolBytes
           file: ./abis/ERC20SymbolBytes.json
-        - name: LoanManager
-          file: ./abis/LoanManager.json
-        - name: WithdrawalManager
-          file: ./abis/WithdrawalManager.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:
-      - event: Transfer(indexed address,indexed address,uint256)
-        handler: handleTransfer
       - event: Deposit(indexed address,indexed address,uint256,uint256)
         handler: handleDeposit
       - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
@@ -208,8 +217,6 @@ templates:
       abis:
         - name: WithdrawalManager
           file: ./abis/WithdrawalManager.json
-        - name: LoanManager
-          file: ./abis/LoanManager.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:

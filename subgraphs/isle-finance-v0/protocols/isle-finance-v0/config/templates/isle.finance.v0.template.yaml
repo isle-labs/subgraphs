@@ -146,22 +146,8 @@ templates:
         - name: LoanManager
           file: ./abis/LoanManager.json
       eventHandlers:
-        - event: AdminFeeSet(uint256)
-          handler: handleAdminFeeSet
-        - event: BaseRateSet(uint96)
-          handler: handleBaseRateSet
-        - event: BuyerSet(indexed address)
-          handler: handleBuyerSet
-        - event: CoverDeposited(uint256)
-          handler: handleCoverDeposited
-        - event: CoverLiquidated(uint256)
-          handler: handleCoverLiquidated
-        - event: CoverWithdrawn(uint256)
-          handler: handleCoverWithdrawn
         - event: Initialized(indexed address,indexed address,address)
           handler: handleInitialized
-        - event: MinCoverSet(uint104)
-          handler: handleMinCoverSet
         - event: OpenToPublicSet(bool)
           handler: handleOpenToPublicSet
         - event: PoolLimitSet(uint104)
@@ -172,10 +158,6 @@ templates:
           handler: handleRedeemRequested
         - event: SharesRemoved(indexed address,uint256)
           handler: handleSharesRemoved
-        - event: ValidLenderSet(indexed address,bool)
-          handler: handleValidLenderSet
-        - event: ValidSellerSet(indexed address,bool)
-          handler: handleValidSellerSet
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: Pool

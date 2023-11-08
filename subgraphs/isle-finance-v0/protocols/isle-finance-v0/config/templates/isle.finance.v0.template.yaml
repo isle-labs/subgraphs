@@ -11,54 +11,12 @@ graft:
 {{/graftEnabled}}
 dataSources:
   - kind: ethereum/contract
-    name: IsleGlobals
-    network: {{ network }}
-    source:
-      address: "{{ IsleGlobals.address }}"
-      abi: IsleGlobals
-      startBlock: {{ IsleGlobals.startBlock }}
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities: []
-      abis:
-        - name: IsleGlobals
-          file: ./abis/IsleGlobals.json
-      eventHandlers:
-        - event: ContractPausedSet(indexed address,indexed address,bool)
-          handler: handleContractPausedSet
-        - event: ProtocolFeeSet(uint24)
-          handler: handleProtocolFeeSet
-        - event: ProtocolPausedSet(indexed address,bool)
-          handler: handleProtocolPausedSet
-      file: ./protocols/isle-finance-v0/src/mapping.ts
-  - kind: ethereum/contract
-    name: Receivable
-    network: {{ network }}
-    source:
-      address: "{{ Receivable.address }}"
-      abi: Receivable
-      startBlock: {{ Receivable.startBlock }}
-    mapping:
-      kind: ethereum/events
-      apiVersion: 0.0.7
-      language: wasm/assemblyscript
-      entities: []
-      abis:
-        - name: Receivable
-          file: ./abis/Receivable.json
-      eventHandlers:
-        - event: AssetBurned(indexed uint256)
-          handler: handleAssetBurned
-        - event: AssetCreated(indexed address,indexed address,indexed uint256,uint256,uint256)
-          handler: handleAssetCreated
-      file: ./protocols/isle-finance-v0/src/mapping.ts
-  - kind: ethereum/contract
     name: PoolAddressesProvider 
     network: {{ network }}
     source:
+      address: "{{ PoolAddressesProvider.address }}"
       abi: PoolAddressesProvider
+      startBlock: {{ PoolAddressesProvider.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -67,8 +25,6 @@ dataSources:
       abis:
         - name: PoolAddressesProvider
           file: ./abis/PoolAddressesProvider.json
-        - name: Pool
-          file: ./abis/Pool.json
         - name: LoanManager
           file: ./abis/LoanManager.json
         - name: WithdrawalManager
@@ -99,34 +55,18 @@ templates:
           file: ./abis/ERC20SymbolBytes.json
         - name: LoanManager
           file: ./abis/LoanManager.json
-        - name: WithdrawalManager
-          file: ./abis/WithdrawalManager.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:
+        - event: Initialized(address)
+          handler: handleLoanManagerInitialized
         - event: PaymentAdded(indexed uint16,indexed
             uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handlePaymentAdded
-        - event: AccountingStateUpdated(uint256,uint112)
-          handler: handleAccountingStateUpdated
-        - event: FeesPaid(indexed uint16,uint256,uint256)
-          handler: handleFeesPaid
-        - event: FundsDistributed(indexed uint16,uint256,uint256)
-          handler: handleFundsDistributed
-        - event: FundsWithdrawn(indexed uint16,uint256)
-          handler: handleFundsWithdrawn
-        - event: ImpairmentRemoved(indexed uint16,uint256)
-          handler: handleImpairmentRemoved
-        - event: LoanImpaired(indexed uint16,uint256)
-          handler: handleLoanImpaired
         - event: LoanRepaid(indexed uint16,uint256,uint256)
           handler: handleLoanRepaid
-        - event: PaymentRemoved(indexed uint16,indexed uint256)
-          handler: handlePaymentRemoved
-        - event: PrincipalOutUpdated(uint128)
-          handler: handlePrincipalOutUpdated
-        - event: UnrealizedLossesUpdated(uint128)
-          handler: handleUnrealizedLossesUpdated
+        - event: FeesPaid(indexed uint16,uint256,uint256)
+          handler: handleFeesPaid
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: PoolConfigurator
@@ -147,17 +87,11 @@ templates:
           file: ./abis/LoanManager.json
       eventHandlers:
         - event: Initialized(indexed address,indexed address,address)
-          handler: handleInitialized
-        - event: OpenToPublicSet(bool)
-          handler: handleOpenToPublicSet
+          handler: handlePoolConfiguratorInitialized
         - event: PoolLimitSet(uint104)
           handler: handlePoolLimitSet
-        - event: RedeemProcessed(indexed address,uint256,uint256)
-          handler: handleRedeemProcessed
-        - event: RedeemRequested(indexed address,uint256)
-          handler: handleRedeemRequested
-        - event: SharesRemoved(indexed address,uint256)
-          handler: handleSharesRemoved
+        - event: OpenToPublicSet(bool)
+          handler: handleOpenToPublicSet
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: Pool
@@ -202,10 +136,6 @@ templates:
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
       eventHandlers:
-        - event: WithdrawalCancelled(indexed address)
-          handler: handleWithdrawalCancelled
-        - event: WithdrawalProcessed(indexed address,uint256,uint256)
-          handler: handleWithdrawalProcessed
-        - event: WithdrawalUpdated(indexed address,uint256,uint64,uint64)
-          handler: handleWithdrawalUpdated
+        - event: Initialized(address,uint256,uint256)
+          handler: handleWithdrawalManagerInitialized
       file: ./protocols/isle-finance-v0/src/mapping.ts

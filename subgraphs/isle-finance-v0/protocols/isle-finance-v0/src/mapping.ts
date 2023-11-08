@@ -6,12 +6,27 @@ import {
   ethereum,
   log,
 } from "@graphprotocol/graph-ts";
-import { ProxyCreated } from "../../../generated/PoolAddressesProvider/PoolAddressesProvider";
 import {
-  Initialized,
+  PoolAddressesProvider,
+  ProxyCreated,
+} from "../../../generated/PoolAddressesProvider/PoolAddressesProvider";
+import {
+  Initialized as WithdrawalManagerInitialized,
+  WithdrawalManager,
+} from "../../../generated/templates/WithdrawalManager/WithdrawalManager";
+import {
+  Initialized as PoolConfiguratorInitialized,
+  PoolLimitSet,
+  OpenToPublicSet,
   PoolConfigurator,
 } from "../../../generated/templates/PoolConfigurator/PoolConfigurator";
-import { LoanManager } from "../../../generated/templates/LoanManager/LoanManager";
+import {
+  Initialized as LoanManagerInitialized,
+  PaymentAdded,
+  LoanRepaid,
+  FeesPaid,
+  LoanManager,
+} from "../../../generated/templates/LoanManager/LoanManager";
 import {
   Pool as PoolTemplate,
   PoolConfigurator as PoolConfiguratorTemplate,
@@ -24,6 +39,7 @@ import {
   Withdraw,
 } from "../../../generated/templates/Pool/Pool";
 import {
+  BIGDECIMAL_ONE,
   BIGDECIMAL_ZERO,
   BIGINT_ZERO,
   exponentToBigDecimal,
@@ -32,29 +48,22 @@ import {
   INT_ZERO,
   SECONDS_PER_DAY,
   TokenType,
-  TransactionType,
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
 import {
   getProtocolData,
-  ISLE_GLOBALS as ISLE_GLOBALS_ADDRESS,
-  RECEIVABLE as RECEIVABLE_ADDRESS,
-  POOL_ADDRESSES_PROVIDER as POOL_ADDRESSES_PROVIDER_ADDRESS,
-  ISLE_USD_ADDRESS,
   ISLE_USD_DECIMALS,
-  UNDERLYING_DECIMALS,
-  ZERO_ADDRESS,
   POOL_CONFIGURATOR_BYTES32 as POOL_CONFIGURATOR_ID,
   LOAN_MANAGER_BYTES32 as LOAN_MANAGER_ID,
   WITHDRAWAL_MANAGER_BYTES32 as WITHDRAWAL_MANAGER_ID,
 } from "./constants";
-import { MarketDailySnapshot, Token, _Loan } from "../../../generated/schema";
-import { ERC20, Transfer } from "../../../generated/templates/Pool/ERC20";
+import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
+import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 
-/////////////////////
-//// Pool Events ////
-/////////////////////
+///////////////////////////////////
+//// Addresses Provider Events ////
+///////////////////////////////////
 
 //
 // Pool-side contracts created event
@@ -70,7 +79,76 @@ export function handleProxyCreated(event: ProxyCreated): void {
   }
 }
 
-export function handleInitialized(event: Initialized): void {
+///////////////////////////////////
+//// Withdrawal Manager Events ////
+///////////////////////////////////
+
+export function handleWithdrawalManagerInitialized(
+  event: WithdrawalManagerInitialized
+): void {
+  const withdrawalManagerContract = WithdrawalManager.bind(event.address);
+  const tryAddressesProvider =
+    withdrawalManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
+    log.error(
+      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()]
+    );
+    return;
+  }
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value
+  );
+
+  const try_getPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (try_getPoolConfigurator.reverted) {
+    log.error(
+      "[handleWithdrawalManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()]
+    );
+    return;
+  }
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    try_getPoolConfigurator.value
+  );
+
+  const tryPool = PoolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleWithdrawalManagerInitialized] PoolConfigurator contract {} does not have a pool",
+      [try_getPoolConfigurator.value.toHexString()]
+    );
+    return;
+  }
+  const tryAsset = PoolConfiguratorContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error(
+      "[handleWithdrawalManagerInitialized] PoolConfigurator contract {} does not have an asset",
+      [try_getPoolConfigurator.value.toHexString()]
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    tryPool.value,
+    tryAsset.value,
+    event,
+    getProtocolData()
+  );
+
+  const market = manager.getMarket();
+  market._withdrawalManager = Bytes.fromHexString(event.address.toHexString());
+  market.save();
+}
+
+/////////////////////
+//// Pool Events ////
+/////////////////////
+
+export function handlePoolConfiguratorInitialized(
+  event: PoolConfiguratorInitialized
+): void {
   PoolTemplate.create(event.params.pool_);
 
   const poolContract = Pool.bind(event.params.pool_);
@@ -82,9 +160,10 @@ export function handleInitialized(event: Initialized): void {
 
   const tryInputToken = poolContract.try_asset();
   if (tryInputToken.reverted) {
-    log.error("[handleInitialized] Pool contract {} does not have an asset", [
-      event.params.pool_.toHexString(),
-    ]);
+    log.error(
+      "[handlePoolConfiguratorInitialized] Pool contract {} does not have an asset",
+      [event.params.pool_.toHexString()]
+    );
     return;
   }
 
@@ -94,7 +173,7 @@ export function handleInitialized(event: Initialized): void {
     event,
     getProtocolData()
   );
-  
+
   // new market, set both interest rates as 0
   const market = manager.getMarket();
   manager.getOrUpdateRate(
@@ -111,7 +190,7 @@ export function handleInitialized(event: Initialized): void {
   const tryConfigurator = poolContract.try_configurator();
   if (tryConfigurator.reverted) {
     log.error(
-      "[handleInitialized] Pool contract {} does not have a configurator",
+      "[handlePoolConfiguratorInitialized] Pool contract {} does not have a configurator",
       [event.params.pool_.toHexString()]
     );
     return;
@@ -124,156 +203,13 @@ export function handleInitialized(event: Initialized): void {
   market.outputTokenSupply = BIGINT_ZERO;
   market.outputTokenPriceUSD = BIGDECIMAL_ZERO;
   market.exchangeRate = BIGDECIMAL_ZERO; // exchange rate = (inputTokenBalance / outputTokenSupply) OR (totalAssets() / totalSupply())
-  market.isActive = false; // controlled with setAsActive
-  market.canBorrowFrom = false; // controlled with setAsActive
+  market.isActive = true; // controlled with ContractPausedSet/ProtocolPausedSet
+  market.canBorrowFrom = true; // controlled with ContractPausedSet/ProtocolPausedSet
   market.canUseAsCollateral = false; // collateral is posted during loans separate from any deposits
   market.borrowedToken = tryInputToken.value;
   market.stableBorrowedTokenBalance = BIGINT_ZERO;
   market._poolConfigurator = tryConfigurator.value;
   market.save();
-}
-
-/*
-//
-// handles borrow creations for loans
-export function handleLoanFunded(event: LoanFunded): void {
-  const loan = getOrCreateLoan(event.params.loan_, event);
-  const loanManagerContract = LoanManager.bind(event.params.loanManager_);
-  const tryPool = loanManagerContract.try_pool();
-  if (tryPool.reverted) {
-    log.error(
-      "[handleLoanFunded] LoanManager contract {} does not have a pool",
-      [event.params.loanManager_.toHexString()]
-    );
-    return;
-  }
-
-  const mapleLoan = MapleLoan.bind(Address.fromBytes(loan.id));
-  const tryBorrower = mapleLoan.try_borrower();
-  if (tryBorrower.reverted) {
-    log.error(
-      "[handleLoanFunded] MapleLoan contract {} does not have a borrower",
-      [loan.id.toHexString()]
-    );
-    return;
-  }
-
-  loan.borrower = tryBorrower.value;
-  loan.market = Bytes.fromHexString(tryPool.value.toHexString());
-  loan.loanManager = Bytes.fromHexString(
-    event.params.loanManager_.toHexString()
-  );
-  loan.save();
-
-  const poolContract = Pool.bind(tryPool.value);
-  const tryInputToken = poolContract.try_asset();
-  if (tryInputToken.reverted) {
-    log.error("[handleLoanFunded] Pool contract {} does not have an asset", [
-      tryPool.value.toHexString(),
-    ]);
-    return;
-  }
-
-  const manager = new DataManager(
-    tryPool.value,
-    tryInputToken.value,
-    event,
-    getProtocolData()
-  );
-  const market = manager.getMarket();
-  let loans = market._loans;
-  if (!loans) {
-    loans = [];
-  }
-  loans.push(loan.id);
-  market._loans = loans;
-  market.save();
-
-  const inputTokenPriceUSD = getPriceUSD(tryInputToken.value);
-  const inputTokenDecimals = manager.getInputToken().decimals;
-  manager.createBorrow(
-    tryInputToken.value,
-    tryBorrower.value,
-    event.params.amount_,
-    getTotalValueUSD(
-      event.params.amount_,
-      inputTokenDecimals,
-      inputTokenPriceUSD
-    ),
-    event.params.amount_,
-    inputTokenPriceUSD,
-    InterestRateType.FIXED
-  );
-}
-
-//
-// handles money being migrated or transferred in the pool
-export function handleTransfer(event: Transfer): void {
-  if (event.params.from == ZERO_ADDRESS || event.params.to == ZERO_ADDRESS) {
-    // burns/mints are not considered
-    // Also we only want to handle transfers from the migration helper
-    return;
-  }
-
-  if (event.params.from == event.address || event.params.to == event.address) {
-    // this is a transfer to/from the pool itself
-    return;
-  }
-
-  const poolContract = Pool.bind(event.address);
-  const tryInputToken = poolContract.try_asset();
-  if (tryInputToken.reverted) {
-    log.error("[handleTransfer] Pool contract {} does not have an asset", [
-      event.address.toHexString(),
-    ]);
-    return;
-  }
-  const manager = new DataManager(
-    event.address,
-    tryInputToken.value,
-    event,
-    getProtocolData()
-  );
-  updateMarketAndProtocol(manager, event);
-
-  const market = manager.getMarket();
-  const inputTokenDecimals = manager.getInputToken().decimals;
-
-  // get amount (in inputToken) by using the exchange rate
-  const amount = BigInt.fromString(
-    event.params.value
-      .toBigDecimal()
-      .times(market.exchangeRate!)
-      .truncate(0)
-      .toString()
-  );
-  const amountUSD = getTotalValueUSD(
-    amount,
-    inputTokenDecimals,
-    market.inputTokenPriceUSD
-  );
-
-  if (event.params.from == Address.fromHexString(MIGRATION_HELPER)) {
-    manager.createDeposit(
-      market.inputToken,
-      event.params.to,
-      amount,
-      amountUSD,
-      getBalanceOf(event.address, event.params.to),
-      InterestRateType.VARIABLE
-    );
-  } else {
-    manager.createTransfer(
-      market.inputToken,
-      event.params.from,
-      event.params.to,
-      amount,
-      amountUSD,
-      getBalanceOf(event.address, event.params.from),
-      getBalanceOf(event.address, event.params.to),
-      InterestRateType.VARIABLE
-    );
-  }
 }
 
 //
@@ -298,17 +234,17 @@ export function handleDeposit(event: Deposit): void {
   const market = manager.getMarket();
 
   const amountUSD = getTotalValueUSD(
-    event.params.assets_,
+    event.params.assets,
     manager.getInputToken().decimals,
     market.inputTokenPriceUSD
   );
 
   manager.createDeposit(
     market.inputToken,
-    event.params.owner_,
-    event.params.assets_,
+    event.params.owner,
+    event.params.assets,
     amountUSD,
-    getBalanceOf(event.address, event.params.owner_),
+    getBalanceOf(event.address, event.params.owner),
     InterestRateType.VARIABLE
   );
 }
@@ -335,73 +271,38 @@ export function handleWithdraw(event: Withdraw): void {
   const market = manager.getMarket();
 
   const amountUSD = getTotalValueUSD(
-    event.params.assets_,
+    event.params.assets,
     manager.getInputToken().decimals,
     market.inputTokenPriceUSD
   );
 
   manager.createWithdraw(
     market.inputToken,
-    event.params.owner_,
-    event.params.assets_,
+    event.params.owner,
+    event.params.assets,
     amountUSD,
-    getBalanceOf(event.address, event.params.owner_),
+    getBalanceOf(event.address, event.params.owner),
     InterestRateType.VARIABLE
   );
 }
 
 //
-// Sets the pool as active or not (isActive / canBorrowFrom)
-// canUseAsCollateral is not affected bc it is never available
-export function handleSetAsActive(event: SetAsActive): void {
-  // get input token
-  const poolContract = PoolManager.bind(event.address);
-  const tryAsset = poolContract.try_asset();
-  if (tryAsset.reverted) {
-    log.error(
-      "[handleSetAsActive] PoolManager contract {} does not have an asset",
-      [event.address.toHexString()]
-    );
-    return;
-  }
-  const tryPool = poolContract.try_pool();
-  if (tryPool.reverted) {
-    log.error(
-      "[handleSetAsActive] PoolManager contract {} does not have a pool",
-      [event.address.toHexString()]
-    );
-    return;
-  }
-
-  const manager = new DataManager(
-    tryPool.value,
-    tryAsset.value,
-    event,
-    getProtocolData()
-  );
-  const market = manager.getMarket();
-  market.isActive = event.params.active_;
-  market.canBorrowFrom = event.params.active_;
-  market.save();
-}
-
-//
 // Set the supplyCap
-export function handleLiquidityCapSet(event: LiquidityCapSet): void {
+export function handlePoolLimitSet(event: PoolLimitSet): void {
   // get input token
-  const poolContract = PoolManager.bind(event.address);
-  const tryAsset = poolContract.try_asset();
+  const poolConfiguratorContract = PoolConfigurator.bind(event.address);
+  const tryAsset = poolConfiguratorContract.try_asset();
   if (tryAsset.reverted) {
     log.error(
-      "[handleSetAsActive] PoolManager contract {} does not have an asset",
+      "[handleContractPausedSet] PoolConfigurator contract {} does not have an asset",
       [event.address.toHexString()]
     );
     return;
   }
-  const tryPool = poolContract.try_pool();
+  const tryPool = poolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handleSetAsActive] PoolManager contract {} does not have a pool",
+      "[handleContractPausedSet] PoolConfigurator contract {} does not have a pool",
       [event.address.toHexString()]
     );
     return;
@@ -414,162 +315,63 @@ export function handleLiquidityCapSet(event: LiquidityCapSet): void {
     getProtocolData()
   );
   const market = manager.getMarket();
-  market.supplyCap = event.params.liquidityCap_;
+  market.supplyCap = event.params.poolLimit_;
   market.save();
 }
 
-/////////////////////
-//// Loan Events ////
-/////////////////////
-
-//
-// Create MapleLoan instance to watch loan contract
-export function handleLoanInitialized(event: Initialized): void {
-  MapleLoanTemplate.create(event.params.instance_);
-  getOrCreateLoan(event.params.instance_, event);
-}
-
-//
-// Handle loan repayments
-export function handlePaymentMade(event: PaymentMade): void {
-  const loan = getOrCreateLoan(event.address, event);
-  if (!loan.market) {
-    log.error("[handlePaymentMade] Loan {} does not have a market", [
-      event.address.toHexString(),
-    ]);
-    return;
-  }
-  const poolContract = PoolManager.bind(Address.fromBytes(loan.market!));
-  const tryAsset = poolContract.try_asset();
-  if (tryAsset.reverted) {
-    log.error(
-      "[handlePaymentMade] PoolManager contract {} does not have an asset",
-      [loan.market!.toHexString()]
-    );
-    return;
-  }
-
-  const manager = new DataManager(
-    loan.market!,
-    tryAsset.value,
-    event,
-    getProtocolData()
-  );
-  updateMarketAndProtocol(manager, event);
-
-  const mapleLoanContract = MapleLoan.bind(event.address);
-  const tryPrinciple = mapleLoanContract.try_principal();
-  if (tryPrinciple.reverted) {
-    log.error(
-      "[handlePaymentMade] MapleLoan contract {} does not have a principal",
-      [event.address.toHexString()]
-    );
-    return;
-  }
-  const tryBorrower = mapleLoanContract.try_borrower();
-  if (tryBorrower.reverted) {
-    log.error(
-      "[handlePaymentMade] MapleLoan contract {} does not have a borrower",
-      [event.address.toHexString()]
-    );
-    return;
-  }
-  const inputTokenPriceUSD = getPriceUSD(tryAsset.value);
-  const repayAmount = event.params.principalPaid_.plus(
-    event.params.interestPaid_
-  );
-  const inputTokenDecimals = manager.getInputToken().decimals;
-  manager.createRepay(
-    tryAsset.value,
-    tryBorrower.value,
-    repayAmount,
-    getTotalValueUSD(repayAmount, inputTokenDecimals, inputTokenPriceUSD),
-    tryPrinciple.value,
-    inputTokenPriceUSD,
-    InterestRateType.FIXED
-  );
-
-  // update protocol revenue collected
-  // this is either from borrow fees, management fees or loan origination fees
-  manager.addProtocolRevenue(
-    getTotalValueUSD(event.params.fees_, inputTokenDecimals, inputTokenPriceUSD)
-  );
-}
+// TODO
+export function handleOpenToPublicSet(event: OpenToPublicSet): void {}
 
 //////////////////////////////
 //// Loan Manager Events /////
 //////////////////////////////
 
-export function handleLoanManagerInitialized(event: Initialized): void {
-  const loanManagerContract = LoanManager.bind(event.params.instance_);
-  const tryPool = loanManagerContract.try_pool();
+export function handleLoanManagerInitialized(
+  event: LoanManagerInitialized
+): void {
+  const loanManagerContract = LoanManager.bind(event.address);
+
+  // get the asset, i.e. the input token
   const tryAsset = loanManagerContract.try_fundsAsset();
-  if (tryPool.reverted || tryAsset.reverted) {
+  if (tryAsset.reverted) {
     log.error(
-      "[handleLoanManagerInitialized] LoanManager contract {} does not have a pool or fundsAsset",
-      [event.params.instance_.toHexString()]
-    );
-    return;
-  }
-
-  const manager = new DataManager(
-    tryPool.value,
-    tryAsset.value,
-    event,
-    getProtocolData()
-  );
-  const protocol = manager.getProtocol();
-  if (!protocol._loanManagers) {
-    protocol._loanManagers = [];
-  }
-  const loanManagers = protocol._loanManagers!;
-  loanManagers.push(event.params.instance_);
-  protocol._loanManagers = loanManagers;
-  protocol.save();
-
-  const market = manager.getMarket();
-  market._loanManager = Bytes.fromHexString(
-    event.params.instance_.toHexString()
-  );
-  market.save();
-}
-
-///////////////////////////
-//// Liquidator Events ////
-///////////////////////////
-
-export function handleLiquidatorInitialized(event: Initialized): void {
-  LiquidatorTemplate.create(event.params.instance_);
-}
-
-//
-// This is the liquidation function
-// Note: We don't create liquidate events because we don't have the data to do so
-export function handlePortionLiquidated(event: PortionLiquidated): void {
-  const liquidatorContract = Liquidator.bind(event.address);
-  const tryLoanManager = liquidatorContract.try_loanManager();
-  if (tryLoanManager.reverted) {
-    log.error(
-      "[handlePortionLiquidated] Liquidator contract {} does not have a loanManager",
+      "[handleLoanManagerInitialized] LoanManager contract {} does not have an asset",
       [event.address.toHexString()]
     );
     return;
   }
-  const loanManagerContract = LoanManager.bind(tryLoanManager.value);
-  const tryPool = loanManagerContract.try_pool();
-  if (tryPool.reverted) {
+
+  // get the market, i.e. the pool
+  const tryAddressesProvider = loanManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
     log.error(
-      "[handlePortionLiquidated] LoanManager contract {} does not have a pool",
-      [tryLoanManager.value.toHexString()]
+      "[handleProxyCreated] LoanManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()]
     );
     return;
   }
-  const poolContract = Pool.bind(tryPool.value);
-  const tryAsset = poolContract.try_asset();
-  if (tryAsset.reverted) {
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value
+  );
+
+  const try_getPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (try_getPoolConfigurator.reverted) {
     log.error(
-      "[handlePortionLiquidated] Pool contract {} does not have an asset",
-      [tryPool.value.toHexString()]
+      "[handleProxyCreated] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()]
+    );
+    return;
+  }
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    try_getPoolConfigurator.value
+  );
+
+  const tryPool = PoolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handlePaymentAdded] PoolConfigurator contract {} does not have a pool",
+      [try_getPoolConfigurator.value.toHexString()]
     );
     return;
   }
@@ -580,64 +382,70 @@ export function handlePortionLiquidated(event: PortionLiquidated): void {
     event,
     getProtocolData()
   );
-  updateMarketAndProtocol(manager, event);
 
   const market = manager.getMarket();
-  const amountUSD = getTotalValueUSD(
-    event.params.returnedAmount_,
-    manager.getInputToken().decimals,
-    market.inputTokenPriceUSD
-  );
-
-  manager.updateTransactionData(
-    TransactionType.LIQUIDATE,
-    event.params.returnedAmount_,
-    amountUSD
-  );
+  market._loanManager = Bytes.fromHexString(event.address.toHexString());
+  market.save();
 }
 
-//////////////////////////
-//// Migration Events ////
-//////////////////////////
-
 //
-// Track loans migrated from Maple V1 to Maple V2
-export function handleLoanAddedToTransitionLoanManager(
-  event: LoanAddedToTransitionLoanManager
-): void {
-  MapleLoanTemplate.create(event.params.loan_);
-  const loan = getOrCreateLoan(event.params.loan_, event);
-  const loanManagerContract = LoanManager.bind(event.params.loanManager_);
-  const tryPool = loanManagerContract.try_pool();
+// handles borrow creations for loans
+export function handlePaymentAdded(event: PaymentAdded): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+
+  const loanManagerContract = LoanManager.bind(event.address);
+
+  // get the market, i.e. the pool
+  const tryAddressesProvider = loanManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
+    log.error(
+      "[handlePaymentAdded] LoanManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()]
+    );
+    return;
+  }
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value
+  );
+
+  const try_getPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (try_getPoolConfigurator.reverted) {
+    log.error(
+      "[handlePaymentAdded] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()]
+    );
+    return;
+  }
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    try_getPoolConfigurator.value
+  );
+
+  const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handleLoanAddedToTransitionLoanManager] LoanManager contract {} does not have a pool",
-      [event.params.loanManager_.toHexString()]
+      "[handlePaymentAdded] PoolConfigurator contract {} does not have a pool",
+      [try_getPoolConfigurator.value.toHexString()]
     );
     return;
   }
 
-  const mapleLoan = MapleLoan.bind(Address.fromBytes(loan.id));
-  const tryBorrower = mapleLoan.try_borrower();
+  // get the borrower
+  const tryBorrower = PoolConfiguratorContract.try_buyer();
   if (tryBorrower.reverted) {
-    log.warning(
-      "[handleLoanAddedToTransitionLoanManager] MapleLoan contract {} does not have a borrower",
-      [loan.id.toHexString()]
+    log.error(
+      "[handlePaymentAdded] PoolConfigurator contract {} does not have a buyer",
+      [try_getPoolConfigurator.value.toHexString()]
     );
-  } else {
-    loan.borrower = tryBorrower.value;
+    return;
   }
-
-  loan.market = Bytes.fromHexString(tryPool.value.toHexString());
-  loan.loanManager = Bytes.fromHexString(
-    event.params.loanManager_.toHexString()
-  );
-  loan.save();
 
   const poolContract = Pool.bind(tryPool.value);
   const tryInputToken = poolContract.try_asset();
   if (tryInputToken.reverted) {
-    log.error("[handleLoanFunded] Pool contract {} does not have an asset", [
+    log.error("[handlePaymentAdded] Pool contract {} does not have an asset", [
       tryPool.value.toHexString(),
     ]);
     return;
@@ -649,16 +457,133 @@ export function handleLoanAddedToTransitionLoanManager(
     event,
     getProtocolData()
   );
-  const market = manager.getMarket();
-  let loans = market._loans;
-  if (!loans) {
-    loans = [];
-  }
-  loans.push(loan.id);
-  market._loans = loans;
-  market.save();
 
+  const inputTokenPriceUSD = BIGDECIMAL_ONE; // notice that in Isle Finance v0, USDC is the only input token, and its price is hardcoded to 1
+  const inputTokenDecimals = manager.getInputToken().decimals;
+
+  // get principal of the loan
+  const tryLoanInfo = loanManagerContract.try_getLoanInfo(event.params.loanId_);
+  if (tryLoanInfo.reverted) {
+    log.error(
+      "[handlePaymentAdded] LoanManager contract {} does not have a loa info",
+      [event.address.toHexString()]
+    );
+    return;
+  }
+
+  const principal = tryLoanInfo.value.principal;
+
+  loan.market = Bytes.fromHexString(tryPool.value.toHexString());
+  loan.loanManager = Bytes.fromHexString(event.address.toHexString());
+  loan.borrower = tryBorrower.value;
+  loan.principal = principal;
+  loan.interestRate = tryLoanInfo.value.interestRate;
+  loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
+
+  loan.save();
+
+  manager.createBorrow(
+    tryInputToken.value,
+    tryBorrower.value,
+    principal,
+    getTotalValueUSD(principal, inputTokenDecimals, inputTokenPriceUSD),
+    principal,
+    inputTokenPriceUSD,
+    InterestRateType.FIXED
+  );
+}
+
+//
+// Handle loan repayments
+export function handleLoanRepaid(event: LoanRepaid): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+  if (!loan.market) {
+    log.error("[handleLoanRepaid] Loan {} does not have a market", [
+      event.address.toHexString(),
+    ]);
+    return;
+  }
+  const poolContract = Pool.bind(Address.fromBytes(loan.market!));
+  const tryAsset = poolContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error("[handleLoanRepaid] Pool contract {} does not have an asset", [
+      loan.market!.toHexString(),
+    ]);
+    return;
+  }
+
+  const manager = new DataManager(
+    loan.market!,
+    tryAsset.value,
+    event,
+    getProtocolData()
+  );
   updateMarketAndProtocol(manager, event);
+
+  const loanManagerContract = LoanManager.bind(event.address);
+  const tryLoanInfo = loanManagerContract.try_getLoanInfo(event.params.loanId_);
+  if (tryLoanInfo.reverted) {
+    log.error(
+      "[handlePaymentAdded] LoanManager contract {} does not have a loa info",
+      [event.address.toHexString()]
+    );
+    return;
+  }
+  const borrower = tryLoanInfo.value.buyer;
+  const inputTokenPriceUSD = BIGDECIMAL_ONE; // notice that in Isle Finance v0, USDC is the only input token, and its price is hardcoded to 1
+  const repayAmount = event.params.principal_.plus(event.params.interest_);
+  const inputTokenDecimals = manager.getInputToken().decimals;
+  manager.createRepay(
+    tryAsset.value,
+    borrower,
+    repayAmount,
+    getTotalValueUSD(repayAmount, inputTokenDecimals, inputTokenPriceUSD),
+    event.params.principal_,
+    inputTokenPriceUSD,
+    InterestRateType.FIXED
+  );
+}
+
+// update protocol revenue collected
+export function handleFeesPaid(event: FeesPaid): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+  if (!loan.market) {
+    log.error("[handleFeesPaid] Loan {} does not have a market", [
+      event.address.toHexString(),
+    ]);
+    return;
+  }
+  const poolContract = Pool.bind(Address.fromBytes(loan.market!));
+  const tryAsset = poolContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error("[handleFeesPaid] Pool contract {} does not have an asset", [
+      loan.market!.toHexString(),
+    ]);
+    return;
+  }
+
+  const manager = new DataManager(
+    loan.market!,
+    tryAsset.value,
+    event,
+    getProtocolData()
+  );
+  updateMarketAndProtocol(manager, event);
+
+  const inputTokenPriceUSD = BIGDECIMAL_ONE; // notice that in Isle Finance v0, USDC is the only input token, and its price is hardcoded to 1
+  const inputTokenDecimals = manager.getInputToken().decimals;
+
+  manager.addProtocolRevenue(
+    getTotalValueUSD(
+      event.params.protocolFee_,
+      inputTokenDecimals,
+      inputTokenPriceUSD
+    )
+  );
 }
 
 /////////////////
@@ -694,16 +619,14 @@ function updateMarketAndProtocol(
     );
     return;
   }
-  const inputTokenPriceUSD = getPriceUSD(
-    Address.fromBytes(manager.getInputToken().id)
-  );
+  const inputTokenPriceUSD = BIGDECIMAL_ONE;
 
   const exchangeRate = safeDiv(
     tryBalance.value.toBigDecimal(),
     tryTotalSupply.value.toBigDecimal()
   );
   market.outputTokenSupply = tryTotalSupply.value;
-  market.outputTokenPriceUSD = inputTokenPriceUSD.times(exchangeRate);
+  market.outputTokenPriceUSD = inputTokenPriceUSD.times(exchangeRate); // use exchange rate to get price of output token
   market.save();
 
   const tryAUM = loanManagerContract.try_assetsUnderManagement();
@@ -725,7 +648,7 @@ function updateMarketAndProtocol(
   );
 
   // calculate accrued interest on the loans
-  const tryAccruedInterest = loanManagerContract.try_getAccruedInterest();
+  const tryAccruedInterest = loanManagerContract.try_accruedInterest();
   if (tryAccruedInterest.reverted) {
     log.error(
       "[updateMarketAndProtocol] LoanManager contract {} does not have a getAccruedInterest",
@@ -761,27 +684,37 @@ function updateBorrowRate(manager: DataManager): void {
   // update borrow rate using the rate from the loans
   let totalPrincipal = BIGDECIMAL_ZERO;
   let rateAmount = BIGDECIMAL_ZERO;
-  if (!market._loans) return;
-  for (let i = 0; i < market._loans!.length; i++) {
-    const loanContract = MapleLoan.bind(Address.fromBytes(market._loans![i]));
-    const tryPrincipal = loanContract.try_principal();
-    const tryRate = loanContract.try_interestRate();
 
-    if (tryPrincipal.reverted || tryRate.reverted) {
+  const loansOfMarket = market._loans.load();
+
+  if (!loansOfMarket) {
+    log.error("[updateMarketAndProtocol] Market {} does not have any loans", [
+      market.id.toHexString(),
+    ]);
+    return;
+  }
+  for (let i = 0; i < loansOfMarket.length; i++) {
+    const loan = loansOfMarket[i];
+    const principalBigInt = loan.principal;
+    const rateBigInt = loan.interestRate;
+
+    if (!principalBigInt || !rateBigInt) {
       log.error(
-        "[updateMarketAndProtocol] Loan contract {} does not have a principal or interestRate",
-        [loanContract._address.toHexString()]
+        "[updateMarketAndProtocol] Loan {} does not have a principal or interestRate",
+        [loan.id.toHexString()]
       );
-      continue;
+      return;
     }
+
     const principal = safeDiv(
-      tryPrincipal.value.toBigDecimal(),
+      principalBigInt.toBigDecimal(),
       exponentToBigDecimal(manager.getInputToken().decimals)
     );
     totalPrincipal = totalPrincipal.plus(principal);
+    // ex. 10000e6 * 0.12e6 / 1e6 = 1200e6
     rateAmount = rateAmount.plus(
       principal.times(
-        tryRate.value.toBigDecimal().div(exponentToBigDecimal(DEFAULT_DECIMALS))
+        rateBigInt.toBigDecimal().div(exponentToBigDecimal(ISLE_USD_DECIMALS))
       )
     );
   }
@@ -791,12 +724,13 @@ function updateBorrowRate(manager: DataManager): void {
   // catch divide by zero
   if (totalPrincipal.equals(BIGDECIMAL_ZERO)) return;
 
+  // 1200e6 / 10000e6 * 100 = 12, meaning 12% APR
   const borrowRate = safeDiv(rateAmount, totalPrincipal).times(
     exponentToBigDecimal(2)
   );
   manager.getOrUpdateRate(
     InterestRateSide.BORROWER,
-    InterestRateType.VARIABLE,
+    InterestRateType.FIXED,
     borrowRate
   );
 }
@@ -825,7 +759,7 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   const supplyRate = safeDiv(
     totalInterest,
     market.totalDepositBalanceUSD
-  ).times(exponentToBigDecimal(2));
+  ).times(exponentToBigDecimal(2)); // E.g. 5.21% should be stored as 5.21
   manager.getOrUpdateRate(
     InterestRateSide.LENDER,
     InterestRateType.VARIABLE,
@@ -848,36 +782,6 @@ function getBalanceOf(erc20Contract: Address, account: Address): BigInt {
   return tryBalance.value;
 }
 
-function getPriceUSD(asset: Address): BigDecimal {
-  const mapleGlobalsContract = MapleGlobals.bind(
-    Address.fromString(MAPLE_GLOBALS)
-  );
-  let tryPrice = mapleGlobalsContract.try_getLatestPrice(asset);
-  if (tryPrice.reverted) {
-    if (asset == Address.fromString(USDC_ADDRESS)) {
-      const chainlinkContract = Chainlink.bind(
-        Address.fromString(CHAINLINK_USDC_ORACLE)
-      );
-      tryPrice = chainlinkContract.try_latestAnswer();
-    } else {
-      log.warning("[getPriceUSD] Could not get price for asset {}", [
-        asset.toHexString(),
-      ]);
-      return BIGDECIMAL_ZERO;
-    }
-  }
-  const token = Token.load(asset);
-  if (!token) {
-    log.warning("[getPriceUSD] Could not get token entity for asset {}", [
-      asset.toHexString(),
-    ]);
-    return BIGDECIMAL_ZERO;
-  }
-
-  return tryPrice.value
-    .toBigDecimal()
-    .div(exponentToBigDecimal(CHAINLINK_DECIMALS));
-}
 
 //
 // get the price of any amount with error handling
@@ -907,10 +811,8 @@ function getOrCreateLoan(loanId: Bytes, event: ethereum.Event): _Loan {
   let loan = _Loan.load(loanId);
   if (!loan) {
     loan = new _Loan(loanId);
-    loan.rates = [];
     loan.transactionCreated = event.transaction.hash;
     loan.save();
   }
   return loan;
 }
-*/

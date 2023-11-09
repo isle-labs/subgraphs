@@ -51,10 +51,7 @@ import {
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import {
-  getProtocolData,
-  DEFAULT_DECIMALS,
-} from "./constants";
+import { getProtocolData, DEFAULT_DECIMALS } from "./constants";
 import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 
@@ -74,11 +71,10 @@ export function handleProxyCreated(event: ProxyCreated): void {
     LoanManagerTemplate.create(event.params.proxyAddress);
   } else if (id == "WITHDRAWAL_MANAGER") {
     WithdrawalManagerTemplate.create(event.params.proxyAddress);
-  }
-  else {
+  } else {
     log.error(
       "[handleProxyCreated] ProxyCreated event with id {} does not have a template",
-      [id]
+      [id],
     );
   }
 }
@@ -344,7 +340,7 @@ export function handleLoanManagerInitialized(
   if (tryAddressesProvider.reverted) {
     log.error(
       "[handleLoanManagerInitialized] LoanManager contract {} does not have an addressesProvider",
-      [event.address.toHexString()]
+      [event.address.toHexString()],
     );
     return;
   }
@@ -357,7 +353,7 @@ export function handleLoanManagerInitialized(
   if (try_getPoolConfigurator.reverted) {
     log.error(
       "[handleLoanManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
-      [tryAddressesProvider.value.toHexString()]
+      [tryAddressesProvider.value.toHexString()],
     );
     return;
   }
@@ -369,7 +365,7 @@ export function handleLoanManagerInitialized(
   if (tryPool.reverted) {
     log.error(
       "[handleLoanManagerInitialized] PoolConfigurator contract {} does not have a pool",
-      [try_getPoolConfigurator.value.toHexString()]
+      [try_getPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -709,8 +705,8 @@ function updateBorrowRate(manager: DataManager): void {
     // ex. 10000e6 * 0.12e6 / 1e6 = 1200e6
     rateAmount = rateAmount.plus(
       principal.times(
-        rateBigInt.toBigDecimal().div(exponentToBigDecimal(DEFAULT_DECIMALS))
-      )
+        rateBigInt.toBigDecimal().div(exponentToBigDecimal(DEFAULT_DECIMALS)),
+      ),
     );
   }
 

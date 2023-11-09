@@ -9,11 +9,16 @@ import {
 import { ProtocolData } from "../../../src/sdk/manager";
 
 //////////////////////////////
+/////        Time        /////
+//////////////////////////////
+export const DAYS_IN_MONTH = 30;
+
+//////////////////////////////
 ///// Ethereum Addresses /////
 //////////////////////////////
 
 export const ZERO_ADDRESS = Address.fromString(
-  "0x0000000000000000000000000000000000000000"
+  "0x0000000000000000000000000000000000000000",
 );
 
 export const ETH_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
@@ -67,6 +72,6 @@ export function getProtocolData(): ProtocolData {
     BORROWER_PERMISSION_TYPE,
     POOL_CREATOR_PERMISSION_TYPE,
     COLATERALIZATION_TYPE,
-    RISK_TYPE
+    RISK_TYPE,
   );
 }

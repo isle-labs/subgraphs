@@ -20,15 +20,8 @@ export const ETH_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 export const ETH_NAME = "Ether";
 export const ETH_SYMBOL = "ETH";
 export const ETH_DECIMALS = 18;
-export const ISLE_USD_DECIMALS = 6;
+export const DEFAULT_DECIMALS = 18;
 export const UNDERLYING_DECIMALS = 6;
-
-// ids in PoolAddressesProvider
-export const POOL_CONFIGURATOR_BYTES32 =
-  Bytes.fromHexString("POOL_CONFIGURATOR");
-export const LOAN_MANAGER_BYTES32 = Bytes.fromHexString("LOAN_MANAGER");
-export const WITHDRAWAL_MANAGER_BYTES32 =
-  Bytes.fromHexString("WITHDRAWAL_MANAGER");
 
 // encourage address literals to be all lowercase to comparison errors when using strings.
 // Global contracts

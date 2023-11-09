@@ -17,7 +17,6 @@ import {
 import {
   Initialized as PoolConfiguratorInitialized,
   PoolLimitSet,
-  OpenToPublicSet,
   PoolConfigurator,
 } from "../../../generated/templates/PoolConfigurator/PoolConfigurator";
 import {
@@ -35,8 +34,8 @@ import {
 } from "../../../generated/templates";
 import {
   Deposit,
-  Pool,
   Withdraw,
+  Pool,
 } from "../../../generated/templates/Pool/Pool";
 import {
   BIGDECIMAL_ONE,
@@ -53,10 +52,7 @@ import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
 import {
   getProtocolData,
-  ISLE_USD_DECIMALS,
-  POOL_CONFIGURATOR_BYTES32 as POOL_CONFIGURATOR_ID,
-  LOAN_MANAGER_BYTES32 as LOAN_MANAGER_ID,
-  WITHDRAWAL_MANAGER_BYTES32 as WITHDRAWAL_MANAGER_ID,
+  DEFAULT_DECIMALS,
 } from "./constants";
 import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
@@ -69,13 +65,20 @@ import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 // Pool-side contracts created event
 export function handleProxyCreated(event: ProxyCreated): void {
   // create which template depends on the event.params.id
-  const id = event.params.id;
-  if (id === POOL_CONFIGURATOR_ID) {
+  // note that the type of id is Bytes, so we need to convert it to a string
+  const id = event.params.id.toString();
+  if (id == "POOL_CONFIGURATOR") {
     PoolConfiguratorTemplate.create(event.params.proxyAddress);
-  } else if (id === LOAN_MANAGER_ID) {
+  } else if (id == "LOAN_MANAGER") {
     LoanManagerTemplate.create(event.params.proxyAddress);
-  } else if (id === WITHDRAWAL_MANAGER_ID) {
+  } else if (id == "WITHDRAWAL_MANAGER") {
     WithdrawalManagerTemplate.create(event.params.proxyAddress);
+  }
+  else {
+    log.error(
+      "[handleProxyCreated] ProxyCreated event with id {} does not have a template",
+      [id]
+    );
   }
 }
 
@@ -319,9 +322,6 @@ export function handlePoolLimitSet(event: PoolLimitSet): void {
   market.save();
 }
 
-// TODO
-export function handleOpenToPublicSet(event: OpenToPublicSet): void {}
-
 //////////////////////////////
 //// Loan Manager Events /////
 //////////////////////////////
@@ -345,7 +345,7 @@ export function handleLoanManagerInitialized(
   const tryAddressesProvider = loanManagerContract.try_ADDRESSES_PROVIDER();
   if (tryAddressesProvider.reverted) {
     log.error(
-      "[handleProxyCreated] LoanManager contract {} does not have an addressesProvider",
+      "[handleLoanManagerInitialized] LoanManager contract {} does not have an addressesProvider",
       [event.address.toHexString()]
     );
     return;
@@ -358,7 +358,7 @@ export function handleLoanManagerInitialized(
     PoolAddressesProviderContract.try_getPoolConfigurator();
   if (try_getPoolConfigurator.reverted) {
     log.error(
-      "[handleProxyCreated] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      "[handleLoanManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
       [tryAddressesProvider.value.toHexString()]
     );
     return;
@@ -370,7 +370,7 @@ export function handleLoanManagerInitialized(
   const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handlePaymentAdded] PoolConfigurator contract {} does not have a pool",
+      "[handleLoanManagerInitialized] PoolConfigurator contract {} does not have a pool",
       [try_getPoolConfigurator.value.toHexString()]
     );
     return;
@@ -714,7 +714,7 @@ function updateBorrowRate(manager: DataManager): void {
     // ex. 10000e6 * 0.12e6 / 1e6 = 1200e6
     rateAmount = rateAmount.plus(
       principal.times(
-        rateBigInt.toBigDecimal().div(exponentToBigDecimal(ISLE_USD_DECIMALS))
+        rateBigInt.toBigDecimal().div(exponentToBigDecimal(DEFAULT_DECIMALS))
       )
     );
   }

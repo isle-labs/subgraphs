@@ -57,6 +57,10 @@ templates:
           file: ./abis/LoanManager.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
+        - name: PoolAddressesProvider
+          file: ./abis/PoolAddressesProvider.json
+        - name: Pool
+          file: ./abis/Pool.json
       eventHandlers:
         - event: Initialized(address)
           handler: handleLoanManagerInitialized
@@ -79,19 +83,27 @@ templates:
       language: wasm/assemblyscript
       entities: []
       abis:
+        - name: ERC20
+          file: ./abis/ERC20.json
+        - name: ERC20NameBytes
+          file: ./abis/ERC20NameBytes.json
+        - name: ERC20SymbolBytes
+          file: ./abis/ERC20SymbolBytes.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
+        - name: Pool
+          file: ./abis/Pool.json
         - name: WithdrawalManager
           file: ./abis/WithdrawalManager.json
         - name: LoanManager
           file: ./abis/LoanManager.json
+        - name: PoolAddressesProvider
+          file: ./abis/PoolAddressesProvider.json
       eventHandlers:
         - event: Initialized(indexed address,indexed address,address)
           handler: handlePoolConfiguratorInitialized
         - event: PoolLimitSet(uint104)
           handler: handlePoolLimitSet
-        - event: OpenToPublicSet(bool)
-          handler: handleOpenToPublicSet
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: Pool
@@ -114,6 +126,8 @@ templates:
           file: ./abis/ERC20SymbolBytes.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
+        - name: LoanManager
+          file: ./abis/LoanManager.json
       eventHandlers:
       - event: Deposit(indexed address,indexed address,uint256,uint256)
         handler: handleDeposit
@@ -135,6 +149,8 @@ templates:
           file: ./abis/WithdrawalManager.json
         - name: PoolConfigurator
           file: ./abis/PoolConfigurator.json
+        - name: PoolAddressesProvider
+          file: ./abis/PoolAddressesProvider.json
       eventHandlers:
         - event: Initialized(address,uint256,uint256)
           handler: handleWithdrawalManagerInitialized

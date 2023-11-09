@@ -1,5 +1,6 @@
 Reference/
 .vscode/
+.history
 
 subgraph.yaml
 versions.ts

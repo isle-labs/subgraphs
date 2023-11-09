@@ -3,21 +3,13 @@
   "graftEnabled": false,
   "subgraphId": "QmRAQHXVEa45NjhXYUdjzrnhapCbnHvLBFxzZ1m94uF6LE",
   "graftStartBlock": 0,
+  "IsleGlobals": {
+    "startBlock": 4517597,
+    "address": "0xd5175C76F5a129De4F53b0DF5c878706E31910a1"
+  },
   "Receivable": {
     "startBlock": 4517593,
     "address": "0x103d37376F312C0D3FA4021351dC87811E0464B2"
-  },
-  "WithdrawalManager": {
-    "startBlock": 4517611,
-    "address": "0x9EDe7Fa06de4CcF3be5e26e27120eb608D001Ed8"
-  },
-  "LoanManager": {
-    "startBlock": 4517609,
-    "address": "0x14C0c74483abeaA0122DE6b8dD6c51795b48314c"
-  },
-  "PoolConfigurator": {
-    "startBlock": 4517607,
-    "address": "0x4137b1072c18F50D8D5f883043712727efa7B038"
   },
   "PoolAddressesProvider": {
     "startBlock": 4517600,

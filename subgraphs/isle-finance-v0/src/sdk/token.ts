@@ -1,6 +1,6 @@
-import { ERC20 } from "../../generated/LoanManager/ERC20";
-import { ERC20SymbolBytes } from "../../generated/LoanManager/ERC20SymbolBytes";
-import { ERC20NameBytes } from "../../generated/LoanManager/ERC20NameBytes";
+import { ERC20 } from "../../generated/templates/LoanManager/ERC20";
+import { ERC20SymbolBytes } from "../../generated/templates/LoanManager/ERC20SymbolBytes";
+import { ERC20NameBytes } from "../../generated/templates/LoanManager/ERC20NameBytes";
 import { Address, BigDecimal, Bytes, ethereum } from "@graphprotocol/graph-ts";
 import { RewardToken, Token } from "../../generated/schema";
 import {
@@ -16,7 +16,7 @@ import {
  * a wrapper for the Token entity making it easier to
  * use in mappings and get info about the token.
  *
- * Schema Version:  3.1.1
+ * Schema Version:  3.1.0
  * SDK Version:     1.0.7
  * Author(s):
  *  - @melotik

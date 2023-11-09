@@ -46,12 +46,11 @@ import {
   InterestRateType,
   INT_ZERO,
   SECONDS_PER_DAY,
-  DAYS_IN_MONTH,
   TokenType,
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import { getProtocolData, DEFAULT_DECIMALS } from "./constants";
+import { getProtocolData, DEFAULT_DECIMALS, DAYS_IN_MONTH } from "./constants";
 import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 

@@ -2072,6 +2072,9 @@ type _Loan @entity {
   " The account that took out the loan "
   borrower: Account
 
+  " The status of the loan "
+  isActive: Boolean
+
   " The principal amount of the loan "
   principal: BigInt
 

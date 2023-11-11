@@ -468,6 +468,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   loan.market = Bytes.fromHexString(tryPool.value.toHexString());
   loan.loanManager = Bytes.fromHexString(event.address.toHexString());
   loan.borrower = tryBorrower.value;
+  loan.isActive = true;
   loan.principal = principal;
   loan.interestRate = tryLoanInfo.value.interestRate;
   loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
@@ -535,6 +536,9 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     inputTokenPriceUSD,
     InterestRateType.FIXED,
   );
+
+  loan.isActive = false;
+  loan.save();
 }
 
 // update protocol revenue collected

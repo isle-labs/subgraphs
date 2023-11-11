@@ -70,7 +70,7 @@ export class ProtocolData {
     public readonly borrowerPermissionType: string | null,
     public readonly poolCreatorPermissionType: string | null,
     public readonly collateralizationType: string | null,
-    public readonly riskType: string | null
+    public readonly riskType: string | null,
   ) {}
 }
 
@@ -78,7 +78,7 @@ export class RewardData {
   constructor(
     public readonly rewardToken: RewardToken,
     public readonly rewardTokenEmissionsAmount: BigInt,
-    public readonly rewardTokenEmissionsUSD: BigDecimal
+    public readonly rewardTokenEmissionsUSD: BigDecimal,
   ) {}
 }
 
@@ -95,7 +95,7 @@ export class DataManager {
     marketID: Bytes,
     inputToken: Bytes,
     event: ethereum.Event,
-    protocolData: ProtocolData
+    protocolData: ProtocolData,
   ) {
     this.protocol = this.getOrCreateLendingProtocol(protocolData);
     this.inputToken = new TokenManager(inputToken, event);
@@ -256,7 +256,7 @@ export class DataManager {
   getOrCreateOracle(
     oracleAddress: Address,
     isUSD: boolean,
-    source?: string
+    source?: string,
   ): Oracle {
     const oracleID = this.market.id.concat(this.market.inputToken);
     let oracle = Oracle.load(oracleID);
@@ -285,7 +285,7 @@ export class DataManager {
   getOrUpdateRate(
     rateSide: string,
     rateType: string,
-    interestRate: BigDecimal
+    interestRate: BigDecimal,
   ): InterestRate {
     const interestRateID = rateSide
       .concat("-")
@@ -318,7 +318,7 @@ export class DataManager {
   getOrUpdateFee(
     feeType: string,
     flatFee: BigDecimal | null = null,
-    rate: BigDecimal | null = null
+    rate: BigDecimal | null = null,
   ): Fee {
     let fee = Fee.load(feeType);
     if (!fee) {
@@ -379,7 +379,7 @@ export class DataManager {
     amountUSD: BigDecimal,
     newBalance: BigInt,
     interestType: string | null = null,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): Deposit {
     const depositor = new AccountManager(account);
     if (depositor.isNewUser()) {
@@ -390,7 +390,7 @@ export class DataManager {
       depositor.getAccount(),
       this.market,
       PositionSide.COLLATERAL,
-      interestType
+      interestType,
     );
     position.addPosition(
       this.event,
@@ -399,13 +399,13 @@ export class DataManager {
       newBalance,
       TransactionType.DEPOSIT,
       this.market.inputTokenPriceUSD,
-      principal
+      principal,
     );
 
     const deposit = new Deposit(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.DEPOSIT)
+        .concatI32(Transaction.DEPOSIT),
     );
     deposit.hash = this.event.transaction.hash;
     deposit.nonce = this.event.transaction.nonce;
@@ -436,7 +436,7 @@ export class DataManager {
     amountUSD: BigDecimal,
     newBalance: BigInt,
     interestType: string | null = null,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): Withdraw | null {
     const withdrawer = new AccountManager(account);
     if (withdrawer.isNewUser()) {
@@ -447,7 +447,7 @@ export class DataManager {
       withdrawer.getAccount(),
       this.market,
       PositionSide.COLLATERAL,
-      interestType
+      interestType,
     );
     position.subtractPosition(
       this.event,
@@ -455,13 +455,13 @@ export class DataManager {
       newBalance,
       TransactionType.WITHDRAW,
       this.market.inputTokenPriceUSD,
-      principal
+      principal,
     );
     const positionID = position.getPositionID();
     if (!positionID) {
       log.error(
         "[createWithdraw] positionID is null for market: {} account: {}",
-        [this.market.id.toHexString(), account.toHexString()]
+        [this.market.id.toHexString(), account.toHexString()],
       );
       return null;
     }
@@ -469,7 +469,7 @@ export class DataManager {
     const withdraw = new Withdraw(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.WITHDRAW)
+        .concatI32(Transaction.WITHDRAW),
     );
     withdraw.hash = this.event.transaction.hash;
     withdraw.nonce = this.event.transaction.nonce;
@@ -501,7 +501,7 @@ export class DataManager {
     newBalance: BigInt,
     tokenPriceUSD: BigDecimal, // used for different borrow token in CDP
     interestType: string | null = null,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): Borrow {
     const borrower = new AccountManager(account);
     if (borrower.isNewUser()) {
@@ -512,7 +512,7 @@ export class DataManager {
       borrower.getAccount(),
       this.market,
       PositionSide.BORROWER,
-      interestType
+      interestType,
     );
     position.addPosition(
       this.event,
@@ -521,13 +521,13 @@ export class DataManager {
       newBalance,
       TransactionType.BORROW,
       tokenPriceUSD,
-      principal
+      principal,
     );
 
     const borrow = new Borrow(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.BORROW)
+        .concatI32(Transaction.BORROW),
     );
     borrow.hash = this.event.transaction.hash;
     borrow.nonce = this.event.transaction.nonce;
@@ -559,7 +559,7 @@ export class DataManager {
     newBalance: BigInt,
     tokenPriceUSD: BigDecimal, // used for different borrow token in CDP
     interestType: string | null = null,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): Repay | null {
     const repayer = new AccountManager(account);
     if (repayer.isNewUser()) {
@@ -570,7 +570,7 @@ export class DataManager {
       repayer.getAccount(),
       this.market,
       PositionSide.BORROWER,
-      interestType
+      interestType,
     );
     position.subtractPosition(
       this.event,
@@ -578,7 +578,7 @@ export class DataManager {
       newBalance,
       TransactionType.REPAY,
       tokenPriceUSD,
-      principal
+      principal,
     );
     const positionID = position.getPositionID();
     if (!positionID) {
@@ -592,7 +592,7 @@ export class DataManager {
     const repay = new Repay(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.REPAY)
+        .concatI32(Transaction.REPAY),
     );
     repay.hash = this.event.transaction.hash;
     repay.nonce = this.event.transaction.nonce;
@@ -625,7 +625,7 @@ export class DataManager {
     profitUSD: BigDecimal,
     newBalance: BigInt, // repaid token balance for liquidatee
     interestType: string | null = null,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): Liquidate | null {
     const liquidatorAccount = new AccountManager(liquidator);
     if (liquidatorAccount.isNewUser()) {
@@ -641,7 +641,7 @@ export class DataManager {
       liquidateeAccount.getAccount(),
       this.market,
       PositionSide.COLLATERAL,
-      interestType
+      interestType,
     );
     liquidateePosition.subtractPosition(
       this.event,
@@ -649,7 +649,7 @@ export class DataManager {
       newBalance,
       TransactionType.LIQUIDATE,
       this.market.inputTokenPriceUSD,
-      principal
+      principal,
     );
     // Note:
     //  - liquidatees are not considered users since they are not spending gas for the transaction
@@ -659,7 +659,7 @@ export class DataManager {
     if (!positionID) {
       log.error(
         "[createLiquidate] positionID is null for market: {} account: {}",
-        [this.market.id.toHexString(), liquidatee.toHexString()]
+        [this.market.id.toHexString(), liquidatee.toHexString()],
       );
       return null;
     }
@@ -667,7 +667,7 @@ export class DataManager {
     const liquidate = new Liquidate(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.LIQUIDATE)
+        .concatI32(Transaction.LIQUIDATE),
     );
     liquidate.hash = this.event.transaction.hash;
     liquidate.nonce = this.event.transaction.nonce;
@@ -704,7 +704,7 @@ export class DataManager {
     receiverNewBalance: BigInt,
     interestType: string | null = null,
     senderPrincipal: BigInt | null = null,
-    receiverPrincipal: BigInt | null = null
+    receiverPrincipal: BigInt | null = null,
   ): Transfer | null {
     const transferrer = new AccountManager(sender);
     if (transferrer.isNewUser()) {
@@ -715,7 +715,7 @@ export class DataManager {
       transferrer.getAccount(),
       this.market,
       PositionSide.COLLATERAL,
-      interestType
+      interestType,
     );
     transferrerPosition.subtractPosition(
       this.event,
@@ -723,13 +723,13 @@ export class DataManager {
       senderNewBalance,
       TransactionType.TRANSFER,
       this.market.inputTokenPriceUSD,
-      senderPrincipal
+      senderPrincipal,
     );
     const positionID = transferrerPosition.getPositionID();
     if (!positionID) {
       log.error(
         "[createTransfer] positionID is null for market: {} account: {}",
-        [this.market.id.toHexString(), receiver.toHexString()]
+        [this.market.id.toHexString(), receiver.toHexString()],
       );
       return null;
     }
@@ -740,7 +740,7 @@ export class DataManager {
       recieverAccount.getAccount(),
       this.market,
       PositionSide.COLLATERAL,
-      interestType
+      interestType,
     );
     receiverPosition.addPosition(
       this.event,
@@ -749,13 +749,13 @@ export class DataManager {
       receiverNewBalance,
       TransactionType.TRANSFER,
       this.market.inputTokenPriceUSD,
-      receiverPrincipal
+      receiverPrincipal,
     );
 
     const transfer = new Transfer(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.TRANSFER)
+        .concatI32(Transaction.TRANSFER),
     );
     transfer.hash = this.event.transaction.hash;
     transfer.nonce = this.event.transaction.nonce;
@@ -784,7 +784,7 @@ export class DataManager {
     asset: Address,
     account: Address,
     amount: BigInt,
-    amountUSD: BigDecimal
+    amountUSD: BigDecimal,
   ): Flashloan {
     const flashloaner = new AccountManager(account);
     if (flashloaner.isNewUser()) {
@@ -796,7 +796,7 @@ export class DataManager {
     const flashloan = new Flashloan(
       this.event.transaction.hash
         .concatI32(this.event.logIndex.toI32())
-        .concatI32(Transaction.FLASHLOAN)
+        .concatI32(Transaction.FLASHLOAN),
     );
     flashloan.hash = this.event.transaction.hash;
     flashloan.nonce = this.event.transaction.nonce;
@@ -848,12 +848,12 @@ export class DataManager {
         rewardTokenEmissionsAmount = insert(
           rewardTokenEmissionsAmount,
           rewardData.rewardTokenEmissionsAmount,
-          i
+          i,
         );
         rewardTokenEmissionsUSD = insert(
           rewardTokenEmissionsUSD,
           rewardData.rewardTokenEmissionsUSD,
-          i
+          i,
         );
         break;
       } else if (index == 0) {
@@ -867,7 +867,7 @@ export class DataManager {
           // insert rewardData at end of array
           rewardTokens.push(rewardData.rewardToken.id);
           rewardTokenEmissionsAmount.push(
-            rewardData.rewardTokenEmissionsAmount
+            rewardData.rewardTokenEmissionsAmount,
           );
           rewardTokenEmissionsUSD.push(rewardData.rewardTokenEmissionsUSD);
           break;
@@ -888,10 +888,10 @@ export class DataManager {
     newVariableBorrowBalance: BigInt | null = null,
     newStableBorrowBalance: BigInt | null = null,
     newReserveBalance: BigInt | null = null,
-    exchangeRate: BigDecimal | null = null
+    exchangeRate: BigDecimal | null = null,
   ): void {
     const mantissaFactorBD = exponentToBigDecimal(
-      this.inputToken.getDecimals()
+      this.inputToken.getDecimals(),
     );
     this.inputToken.updatePrice(inputTokenPriceUSD);
     this.market.inputTokenPriceUSD = inputTokenPriceUSD;
@@ -942,10 +942,10 @@ export class DataManager {
         continue;
       }
       totalValueLockedUSD = totalValueLockedUSD.plus(
-        _market.totalValueLockedUSD
+        _market.totalValueLockedUSD,
       );
       totalBorrowBalanceUSD = totalBorrowBalanceUSD.plus(
-        _market.totalBorrowBalanceUSD
+        _market.totalBorrowBalanceUSD,
       );
     }
     this.protocol.totalValueLockedUSD = totalValueLockedUSD;
@@ -971,7 +971,7 @@ export class DataManager {
   // Update the protocol revenue
   addProtocolRevenue(
     protocolRevenueDelta: BigDecimal,
-    fee: Fee | null = null
+    fee: Fee | null = null,
   ): void {
     this.updateRevenue(protocolRevenueDelta, BIGDECIMAL_ZERO);
 
@@ -981,11 +981,11 @@ export class DataManager {
 
     const marketRevDetails = this.getOrCreateRevenueDetail(
       this.market.id,
-      true
+      true,
     );
     const protocolRevenueDetail = this.getOrCreateRevenueDetail(
       this.protocol.id,
-      false
+      false,
     );
 
     this.insertInOrder(marketRevDetails, protocolRevenueDelta, fee.id);
@@ -997,7 +997,7 @@ export class DataManager {
   // Update the protocol revenue
   addSupplyRevenue(
     supplyRevenueDelta: BigDecimal,
-    fee: Fee | null = null
+    fee: Fee | null = null,
   ): void {
     this.updateRevenue(BIGDECIMAL_ZERO, supplyRevenueDelta);
 
@@ -1007,11 +1007,11 @@ export class DataManager {
 
     const marketRevDetails = this.getOrCreateRevenueDetail(
       this.market.id,
-      true
+      true,
     );
     const protocolRevenueDetail = this.getOrCreateRevenueDetail(
       this.protocol.id,
-      false
+      false,
     );
 
     this.insertInOrder(marketRevDetails, supplyRevenueDelta, fee.id);
@@ -1020,7 +1020,7 @@ export class DataManager {
 
   private updateRevenue(
     protocolRevenueDelta: BigDecimal,
-    supplyRevenueDelta: BigDecimal
+    supplyRevenueDelta: BigDecimal,
   ): void {
     const totalRevenueDelta = protocolRevenueDelta.plus(supplyRevenueDelta);
 
@@ -1056,7 +1056,7 @@ export class DataManager {
       transactionType,
       false,
       0,
-      this.market.id
+      this.market.id,
     );
     if (transactionType == TransactionType.DEPOSIT) {
       this.market.cumulativeUniqueDepositors += activityCounter(
@@ -1064,13 +1064,13 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
       this.protocol.cumulativeUniqueDepositors += activityCounter(
         account,
         transactionType,
         true,
-        0
+        0,
       );
     }
     if (transactionType == TransactionType.BORROW) {
@@ -1079,13 +1079,13 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
       this.protocol.cumulativeUniqueBorrowers += activityCounter(
         account,
         transactionType,
         true,
-        0
+        0,
       );
     }
     if (transactionType == TransactionType.LIQUIDATOR) {
@@ -1094,13 +1094,13 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
       this.protocol.cumulativeUniqueLiquidators += activityCounter(
         account,
         transactionType,
         true,
-        0
+        0,
       );
     }
     if (transactionType == TransactionType.LIQUIDATEE) {
@@ -1109,13 +1109,13 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
       this.protocol.cumulativeUniqueLiquidatees += activityCounter(
         account,
         transactionType,
         true,
-        0
+        0,
       );
     }
     if (transactionType == TransactionType.TRANSFER)
@@ -1124,7 +1124,7 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
     if (transactionType == TransactionType.FLASHLOAN)
       this.market.cumulativeUniqueFlashloaners += activityCounter(
@@ -1132,7 +1132,7 @@ export class DataManager {
         transactionType,
         true,
         0,
-        this.market.id
+        this.market.id,
       );
 
     this.protocol.save();
@@ -1149,7 +1149,7 @@ export class DataManager {
   private updateTransactionData(
     transactionType: string,
     amount: BigInt,
-    amountUSD: BigDecimal
+    amountUSD: BigDecimal,
   ): void {
     if (transactionType == TransactionType.DEPOSIT) {
       this.protocol.depositCount += INT_ONE;
@@ -1210,7 +1210,7 @@ export class DataManager {
   private insertInOrder(
     details: RevenueDetail,
     amountUSD: BigDecimal,
-    associatedSource: string
+    associatedSource: string,
   ): void {
     if (details.sources.length == 0) {
       details.sources = [associatedSource];

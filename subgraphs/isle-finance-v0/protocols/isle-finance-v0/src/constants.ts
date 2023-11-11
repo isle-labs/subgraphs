@@ -26,7 +26,7 @@ export const ETH_NAME = "Ether";
 export const ETH_SYMBOL = "ETH";
 export const ETH_DECIMALS = 18;
 export const DEFAULT_DECIMALS = 18;
-export const UNDERLYING_DECIMALS = 6;
+export const INTEREST_DECIMALS = 6;
 
 // encourage address literals to be all lowercase to comparison errors when using strings.
 // Global contracts

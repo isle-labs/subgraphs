@@ -210,7 +210,7 @@ export function bigIntToBigDecimal(x: BigInt, decimals: i32): BigDecimal {
 export function BDChangeDecimals(
   x: BigDecimal,
   from: i32,
-  to: i32
+  to: i32,
 ): BigDecimal {
   if (to > from) {
     // increase number of decimals
@@ -229,7 +229,7 @@ export function BDChangeDecimals(
 export function insert<Type>(
   arr: Array<Type>,
   value: Type,
-  index: i32 = -1
+  index: i32 = -1,
 ): Array<Type> {
   if (arr.length == 0) {
     return [value];
@@ -255,7 +255,7 @@ export function activityCounter(
   transactionType: string,
   useTransactionType: boolean,
   intervalID: i32, // 0 = no intervalID
-  marketID: Bytes | null = null
+  marketID: Bytes | null = null,
 ): i32 {
   let activityID = account
     .toHexString()

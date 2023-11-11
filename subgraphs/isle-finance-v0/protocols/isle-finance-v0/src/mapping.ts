@@ -50,7 +50,7 @@ import {
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import { getProtocolData, DEFAULT_DECIMALS, DAYS_IN_MONTH } from "./constants";
+import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH } from "./constants";
 import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 
@@ -177,7 +177,7 @@ export function handlePoolConfiguratorInitialized(
   const market = manager.getMarket();
   manager.getOrUpdateRate(
     InterestRateSide.BORROWER,
-    InterestRateType.VARIABLE,
+    InterestRateType.FIXED,
     BIGDECIMAL_ZERO,
   );
   manager.getOrUpdateRate(
@@ -641,11 +641,11 @@ function updateMarketAndProtocol(
     exchangeRate,
   );
 
-  // calculate accrued interest on the loans
-  const tryAccruedInterest = loanManagerContract.try_accruedInterest();
-  if (tryAccruedInterest.reverted) {
+  // calculate accounted interest on the loans
+  const tryAccountedInterest = loanManagerContract.try_accountedInterest();
+  if (tryAccountedInterest.reverted) {
     log.error(
-      "[updateMarketAndProtocol] LoanManager contract {} does not have a getAccruedInterest",
+      "[updateMarketAndProtocol] LoanManager contract {} does not have a getAccountedInterest",
       [market._loanManager!.toHexString()],
     );
     return;
@@ -654,9 +654,9 @@ function updateMarketAndProtocol(
     market._prevRevenue = BIGINT_ZERO;
   }
 
-  if (market._prevRevenue!.lt(tryAccruedInterest.value)) {
-    const revenueDelta = tryAccruedInterest.value.minus(market._prevRevenue!);
-    market._prevRevenue = tryAccruedInterest.value;
+  if (market._prevRevenue!.lt(tryAccountedInterest.value)) {
+    const revenueDelta = tryAccountedInterest.value.minus(market._prevRevenue!);
+    market._prevRevenue = tryAccountedInterest.value;
     market.save();
 
     manager.addSupplyRevenue(
@@ -700,15 +700,14 @@ function updateBorrowRate(manager: DataManager): void {
       return;
     }
 
-    const principal = safeDiv(
-      principalBigInt.toBigDecimal(),
-      exponentToBigDecimal(manager.getInputToken().decimals),
-    );
+    // principal = 5000e18
+    const principal = principalBigInt.toBigDecimal();
     totalPrincipal = totalPrincipal.plus(principal);
-    // ex. 10000e6 * 0.12e6 / 1e6 = 1200e6
+
+    // rateAmount = 5000e18 * 0.12e6 / 1e6 = 600e18
     rateAmount = rateAmount.plus(
       principal.times(
-        rateBigInt.toBigDecimal().div(exponentToBigDecimal(DEFAULT_DECIMALS)),
+        rateBigInt.toBigDecimal().div(exponentToBigDecimal(INTEREST_DECIMALS)),
       ),
     );
   }
@@ -718,7 +717,7 @@ function updateBorrowRate(manager: DataManager): void {
   // catch divide by zero
   if (totalPrincipal.equals(BIGDECIMAL_ZERO)) return;
 
-  // 1200e6 / 10000e6 * 100 = 12, meaning 12% APR
+  // borrowRate = 600e18 / 5000e18 * 100 = 12, meaning 12% APR
   const borrowRate = safeDiv(rateAmount, totalPrincipal).times(
     exponentToBigDecimal(2),
   );

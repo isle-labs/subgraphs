@@ -48,7 +48,7 @@ export class PositionManager {
     account: Account,
     market: Market,
     side: string,
-    interestType: string | null = null
+    interestType: string | null = null,
   ) {
     this.counterID = account.id
       .toHexString()
@@ -101,7 +101,7 @@ export class PositionManager {
     newBalance: BigInt,
     transactionType: string,
     priceUSD: BigDecimal,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): void {
     let positionCounter = _PositionCounter.load(this.counterID);
     if (!positionCounter) {
@@ -213,7 +213,7 @@ export class PositionManager {
     newBalance: BigInt,
     transactionType: string,
     priceUSD: BigDecimal,
-    principal: BigInt | null = null
+    principal: BigInt | null = null,
   ): void {
     const positionCounter = _PositionCounter.load(this.counterID);
     if (!positionCounter) {
@@ -295,7 +295,7 @@ export class PositionManager {
       this.position!.id.concat("-")
         .concat(event.transaction.hash.toHexString())
         .concat("-")
-        .concat(event.logIndex.toString())
+        .concat(event.logIndex.toString()),
     );
     const token = new TokenManager(this.position!.asset, event);
     const mantissaFactorBD = exponentToBigDecimal(token.getDecimals());
@@ -330,7 +330,7 @@ export class PositionManager {
   private dailyActivePosition(
     counter: _PositionCounter,
     event: ethereum.Event,
-    protocol: LendingProtocol
+    protocol: LendingProtocol,
   ): void {
     const lastDay = counter.lastTimestamp.toI32() / SECONDS_PER_DAY;
     const currentDay = event.block.timestamp.toI32() / SECONDS_PER_DAY;

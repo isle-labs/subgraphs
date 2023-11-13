@@ -104,6 +104,10 @@ templates:
           handler: handlePoolConfiguratorInitialized
         - event: PoolLimitSet(uint104)
           handler: handlePoolLimitSet
+        - event: AdminFeeSet(uint256)
+          handler: handleAdminFeeSet
+        - event: MaxCoverLiquidationSet(uint24)
+          handler: handleMaxCoverLiquidationSet
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: Pool

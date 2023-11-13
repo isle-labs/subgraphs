@@ -71,6 +71,8 @@ templates:
           handler: handleLoanRepaid
         - event: FeesPaid(indexed uint16,uint256,uint256)
           handler: handleFeesPaid
+        - event: IssuanceParamsUpdated(indexed uint48,uint256,uint112)
+          handler: handleIssuanceParamsUpdated
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: PoolConfigurator
@@ -108,6 +110,12 @@ templates:
           handler: handleAdminFeeSet
         - event: MaxCoverLiquidationSet(uint24)
           handler: handleMaxCoverLiquidationSet
+        - event: CoverDeposited(uint256)
+          handler: handleCoverDeposited
+        - event: CoverWithdrawn(uint256)
+          handler: handleCoverWithdrawn
+        - event: CoverLiquidated(uint256)
+          handler: handleCoverLiquidated
       file: ./protocols/isle-finance-v0/src/mapping.ts
   - kind: ethereum/contract
     name: Pool

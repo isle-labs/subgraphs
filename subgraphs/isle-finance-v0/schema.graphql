@@ -1050,6 +1050,9 @@ type Market @entity @regularPolling {
   " Max coverage ratio for liquidating pool cover. e.g. 0.5e6 "
   _maxCoverLiquidation: BigInt
 
+  " Current pool cover amount "
+  _poolCover: BigInt
+
   " Admin fee rate of the market. e.g. 0.1e6 "
   _adminFee: BigInt
 
@@ -2077,7 +2080,6 @@ type _PoolConfigurator @entity {
 
   " The market this configurator belongs to "
   market: Market!
-
 }
 
 # Helper entity to keep track of Isle loans

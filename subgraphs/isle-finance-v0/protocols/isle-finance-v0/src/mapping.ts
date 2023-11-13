@@ -17,15 +17,19 @@ import {
 import {
   Initialized as PoolConfiguratorInitialized,
   PoolLimitSet,
-  PoolConfigurator,
   AdminFeeSet,
   MaxCoverLiquidationSet,
+  CoverDeposited,
+  CoverWithdrawn,
+  CoverLiquidated,
+  PoolConfigurator,
 } from "../../../generated/templates/PoolConfigurator/PoolConfigurator";
 import {
   Initialized as LoanManagerInitialized,
   PaymentAdded,
   LoanRepaid,
   FeesPaid,
+  IssuanceParamsUpdated,
   LoanManager,
 } from "../../../generated/templates/LoanManager/LoanManager";
 import {
@@ -235,6 +239,9 @@ export function handlePoolConfiguratorInitialized(
   market.stableBorrowedTokenBalance = BIGINT_ZERO;
   market._poolConfigurator = tryConfigurator.value;
   market._admin = tryAdmin.value;
+  market._maxCoverLiquidation = BIGINT_ZERO;
+  market._poolCover = BIGINT_ZERO;
+  market._adminFee = BIGINT_ZERO;
   market.save();
 }
 
@@ -317,7 +324,7 @@ export function handlePoolLimitSet(event: PoolLimitSet): void {
   const tryAsset = poolConfiguratorContract.try_asset();
   if (tryAsset.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have an asset",
+      "[handlePoolLimitSet] PoolConfigurator contract {} does not have an asset",
       [event.address.toHexString()],
     );
     return;
@@ -325,7 +332,7 @@ export function handlePoolLimitSet(event: PoolLimitSet): void {
   const tryPool = poolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have a pool",
+      "[handlePoolLimitSet] PoolConfigurator contract {} does not have a pool",
       [event.address.toHexString()],
     );
     return;
@@ -349,7 +356,7 @@ export function handleAdminFeeSet(event: AdminFeeSet): void {
   const tryAsset = poolConfiguratorContract.try_asset();
   if (tryAsset.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have an asset",
+      "[handleAdminFeeSet] PoolConfigurator contract {} does not have an asset",
       [event.address.toHexString()],
     );
     return;
@@ -357,7 +364,7 @@ export function handleAdminFeeSet(event: AdminFeeSet): void {
   const tryPool = poolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have a pool",
+      "[handleAdminFeeSet] PoolConfigurator contract {} does not have a pool",
       [event.address.toHexString()],
     );
     return;
@@ -383,7 +390,7 @@ export function handleMaxCoverLiquidationSet(
   const tryAsset = poolConfiguratorContract.try_asset();
   if (tryAsset.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have an asset",
+      "[handleMaxCoverLiquidationSet] PoolConfigurator contract {} does not have an asset",
       [event.address.toHexString()],
     );
     return;
@@ -391,7 +398,7 @@ export function handleMaxCoverLiquidationSet(
   const tryPool = poolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
-      "[handleContractPausedSet] PoolConfigurator contract {} does not have a pool",
+      "[handleMaxCoverLiquidationSet] PoolConfigurator contract {} does not have a pool",
       [event.address.toHexString()],
     );
     return;
@@ -407,6 +414,108 @@ export function handleMaxCoverLiquidationSet(
   market._maxCoverLiquidation = BigInt.fromI32(
     event.params.maxCoverLiquidation_,
   );
+  market.save();
+}
+
+// handle cover deposited to the pool
+export function handleCoverDeposited(event: CoverDeposited): void {
+  // get input token
+  const poolConfiguratorContract = PoolConfigurator.bind(event.address);
+  const tryAsset = poolConfiguratorContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error(
+      "[handleCoverDeposited] PoolConfigurator contract {} does not have an asset",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const tryPool = poolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleCoverDeposited] PoolConfigurator contract {} does not have a pool",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    tryPool.value,
+    tryAsset.value,
+    event,
+    getProtocolData(),
+  );
+  const market = manager.getMarket();
+  if (!market._poolCover) {
+    market._poolCover = BIGINT_ZERO;
+  }
+
+  market._poolCover = market._poolCover!.plus(event.params.amount_);
+  market.save();
+}
+
+// handle cover withdrawn from the pool
+export function handleCoverWithdrawn(event: CoverWithdrawn): void {
+  // get input token
+  const poolConfiguratorContract = PoolConfigurator.bind(event.address);
+  const tryAsset = poolConfiguratorContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error(
+      "[handleCoverWithdrawn] PoolConfigurator contract {} does not have an asset",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const tryPool = poolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleCoverWithdrawn] PoolConfigurator contract {} does not have a pool",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    tryPool.value,
+    tryAsset.value,
+    event,
+    getProtocolData(),
+  );
+  const market = manager.getMarket();
+
+  market._poolCover = market._poolCover!.minus(event.params.amount_);
+  market.save();
+}
+
+// handle cover liquidated
+export function handleCoverLiquidated(event: CoverLiquidated): void {
+  // get input token
+  const poolConfiguratorContract = PoolConfigurator.bind(event.address);
+  const tryAsset = poolConfiguratorContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error(
+      "[handleCoverLiquidated] PoolConfigurator contract {} does not have an asset",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const tryPool = poolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleCoverLiquidated] PoolConfigurator contract {} does not have a pool",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    tryPool.value,
+    tryAsset.value,
+    event,
+    getProtocolData(),
+  );
+  const market = manager.getMarket();
+
+  market._poolCover = market._poolCover!.minus(event.params.toPool_);
   market.save();
 }
 
@@ -675,6 +784,59 @@ export function handleFeesPaid(event: FeesPaid): void {
       inputTokenPriceUSD,
     ),
   );
+}
+
+// handle issuance params updated
+export function handleIssuanceParamsUpdated(
+  event: IssuanceParamsUpdated,
+): void {
+  const loanManagerContract = LoanManager.bind(event.address);
+
+  // get the market, i.e. the pool
+  const tryAddressesProvider = loanManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
+    log.error(
+      "[handleIssuanceParamsUpdated] LoanManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value,
+  );
+
+  const try_getPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (try_getPoolConfigurator.reverted) {
+    log.error(
+      "[handleIssuanceParamsUpdated] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()],
+    );
+    return;
+  }
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    try_getPoolConfigurator.value,
+  );
+
+  const tryPool = PoolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleIssuanceParamsUpdated] PoolConfigurator contract {} does not have a pool",
+      [try_getPoolConfigurator.value.toHexString()],
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    tryPool.value,
+    try_getPoolConfigurator.value,
+    event,
+    getProtocolData(),
+  );
+
+  const market = manager.getMarket();
+  updateMarketAndProtocol(manager, event);
+  market.save();
 }
 
 /////////////////

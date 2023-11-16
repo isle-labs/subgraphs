@@ -674,9 +674,12 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   loan.borrower = tryBorrower.value;
   loan.gracePeriod = tryLoanInfo.value.gracePeriod;
   loan.isActive = true;
+  loan.isDefaulted = false;
   loan.principal = principal;
   loan.interestRate = tryLoanInfo.value.interestRate;
   loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
+  loan.financeTimestamp = tryLoanInfo.value.startDate;
+  loan.maturityTimestamp = tryLoanInfo.value.dueDate;
 
   loan.save();
 
@@ -741,8 +744,8 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     inputTokenPriceUSD,
     InterestRateType.FIXED,
   );
-
   loan.isActive = false;
+  loan.isDefaulted = false;
   loan.save();
 }
 
@@ -925,6 +928,34 @@ function updateMarketAndProtocol(
       ),
     );
   }
+
+  // update withdrawal info
+  const withdrawalManagerContract = WithdrawalManager.bind(
+    Address.fromBytes(market._withdrawalManager!),
+  );
+
+  const try_getCurrentCycleId =
+    withdrawalManagerContract.try_getCurrentCycleId();
+  if (try_getCurrentCycleId.reverted) {
+    log.error(
+      "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a getCurrentCycleId",
+      [market._withdrawalManager!.toHexString()],
+    );
+    return;
+  }
+
+  const try_lockedLiquidity = withdrawalManagerContract.try_lockedLiquidity();
+  if (try_lockedLiquidity.reverted) {
+    log.error(
+      "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a lockedLiquidity",
+      [market._withdrawalManager!.toHexString()],
+    );
+    return;
+  }
+
+  market._currentWithdrawalCycleId = try_getCurrentCycleId.value.toI32();
+  market._lockedLiquidityInWindow = try_lockedLiquidity.value;
+  market.save();
 
   updateBorrowRate(manager);
   updateSupplyRate(manager, event);

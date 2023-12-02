@@ -115,9 +115,9 @@ export function handleWithdrawalManagerInitialized(
     tryAddressesProvider.value,
   );
 
-  const try_getPoolConfigurator =
+  const tryGetPoolConfigurator =
     PoolAddressesProviderContract.try_getPoolConfigurator();
-  if (try_getPoolConfigurator.reverted) {
+  if (tryGetPoolConfigurator.reverted) {
     log.error(
       "[handleWithdrawalManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
       [tryAddressesProvider.value.toHexString()],
@@ -125,14 +125,14 @@ export function handleWithdrawalManagerInitialized(
     return;
   }
   const PoolConfiguratorContract = PoolConfigurator.bind(
-    try_getPoolConfigurator.value,
+    tryGetPoolConfigurator.value,
   );
 
   const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
       "[handleWithdrawalManagerInitialized] PoolConfigurator contract {} does not have a pool",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -140,7 +140,7 @@ export function handleWithdrawalManagerInitialized(
   if (tryAsset.reverted) {
     log.error(
       "[handleWithdrawalManagerInitialized] PoolConfigurator contract {} does not have an asset",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -551,9 +551,9 @@ export function handleLoanManagerInitialized(
     tryAddressesProvider.value,
   );
 
-  const try_getPoolConfigurator =
+  const tryGetPoolConfigurator =
     PoolAddressesProviderContract.try_getPoolConfigurator();
-  if (try_getPoolConfigurator.reverted) {
+  if (tryGetPoolConfigurator.reverted) {
     log.error(
       "[handleLoanManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
       [tryAddressesProvider.value.toHexString()],
@@ -561,14 +561,14 @@ export function handleLoanManagerInitialized(
     return;
   }
   const PoolConfiguratorContract = PoolConfigurator.bind(
-    try_getPoolConfigurator.value,
+    tryGetPoolConfigurator.value,
   );
 
   const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
       "[handleLoanManagerInitialized] PoolConfigurator contract {} does not have a pool",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -606,9 +606,9 @@ export function handlePaymentAdded(event: PaymentAdded): void {
     tryAddressesProvider.value,
   );
 
-  const try_getPoolConfigurator =
+  const tryGetPoolConfigurator =
     PoolAddressesProviderContract.try_getPoolConfigurator();
-  if (try_getPoolConfigurator.reverted) {
+  if (tryGetPoolConfigurator.reverted) {
     log.error(
       "[handlePaymentAdded] PoolAddressesProvider contract {} does not have a poolConfigurator",
       [tryAddressesProvider.value.toHexString()],
@@ -616,14 +616,14 @@ export function handlePaymentAdded(event: PaymentAdded): void {
     return;
   }
   const PoolConfiguratorContract = PoolConfigurator.bind(
-    try_getPoolConfigurator.value,
+    tryGetPoolConfigurator.value,
   );
 
   const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
       "[handlePaymentAdded] PoolConfigurator contract {} does not have a pool",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -633,7 +633,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   if (tryBorrower.reverted) {
     log.error(
       "[handlePaymentAdded] PoolConfigurator contract {} does not have a buyer",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
     );
     return;
   }
@@ -808,9 +808,9 @@ export function handleIssuanceParamsUpdated(
     tryAddressesProvider.value,
   );
 
-  const try_getPoolConfigurator =
+  const tryGetPoolConfigurator =
     PoolAddressesProviderContract.try_getPoolConfigurator();
-  if (try_getPoolConfigurator.reverted) {
+  if (tryGetPoolConfigurator.reverted) {
     log.error(
       "[handleIssuanceParamsUpdated] PoolAddressesProvider contract {} does not have a poolConfigurator",
       [tryAddressesProvider.value.toHexString()],
@@ -818,21 +818,31 @@ export function handleIssuanceParamsUpdated(
     return;
   }
   const PoolConfiguratorContract = PoolConfigurator.bind(
-    try_getPoolConfigurator.value,
+    tryGetPoolConfigurator.value,
   );
 
   const tryPool = PoolConfiguratorContract.try_pool();
   if (tryPool.reverted) {
     log.error(
       "[handleIssuanceParamsUpdated] PoolConfigurator contract {} does not have a pool",
-      [try_getPoolConfigurator.value.toHexString()],
+      [tryGetPoolConfigurator.value.toHexString()],
+    );
+    return;
+  }
+
+  const poolContract = Pool.bind(tryPool.value);
+  const tryInputToken = poolContract.try_asset();
+  if (tryInputToken.reverted) {
+    log.error(
+      "[handleIssuanceParamsUpdated] Pool contract {} does not have an asset",
+      [tryPool.value.toHexString()],
     );
     return;
   }
 
   const manager = new DataManager(
     tryPool.value,
-    try_getPoolConfigurator.value,
+    tryInputToken.value,
     event,
     getProtocolData(),
   );
@@ -875,15 +885,6 @@ function updateMarketAndProtocol(
     return;
   }
   const inputTokenPriceUSD = BIGDECIMAL_ONE;
-
-  const exchangeRate = safeDiv(
-    tryBalance.value.toBigDecimal(),
-    tryTotalSupply.value.toBigDecimal(),
-  );
-  market.outputTokenSupply = tryTotalSupply.value;
-  market.outputTokenPriceUSD = inputTokenPriceUSD.times(exchangeRate); // use exchange rate to get price of output token
-  market.save();
-
   const tryAUM = loanManagerContract.try_assetsUnderManagement();
   if (tryAUM.reverted) {
     log.error(
@@ -892,6 +893,15 @@ function updateMarketAndProtocol(
     );
     return;
   }
+
+  const exchangeRate = safeDiv(
+    tryTotalSupply.value.toBigDecimal(),
+    tryBalance.value.toBigDecimal(),
+  );
+
+  market.outputTokenSupply = tryTotalSupply.value;
+  market.outputTokenPriceUSD = inputTokenPriceUSD.times(exchangeRate); // use exchange rate to get price of output token
+  market.save();
 
   manager.updateMarketAndProtocolData(
     inputTokenPriceUSD,
@@ -934,9 +944,9 @@ function updateMarketAndProtocol(
     Address.fromBytes(market._withdrawalManager!),
   );
 
-  const try_getCurrentCycleId =
+  const tryGetCurrentCycleId =
     withdrawalManagerContract.try_getCurrentCycleId();
-  if (try_getCurrentCycleId.reverted) {
+  if (tryGetCurrentCycleId.reverted) {
     log.error(
       "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a getCurrentCycleId",
       [market._withdrawalManager!.toHexString()],
@@ -944,8 +954,8 @@ function updateMarketAndProtocol(
     return;
   }
 
-  const try_lockedLiquidity = withdrawalManagerContract.try_lockedLiquidity();
-  if (try_lockedLiquidity.reverted) {
+  const tryLockedLiquidity = withdrawalManagerContract.try_lockedLiquidity();
+  if (tryLockedLiquidity.reverted) {
     log.error(
       "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a lockedLiquidity",
       [market._withdrawalManager!.toHexString()],
@@ -953,8 +963,8 @@ function updateMarketAndProtocol(
     return;
   }
 
-  market._currentWithdrawalCycleId = try_getCurrentCycleId.value.toI32();
-  market._lockedLiquidityInWindow = try_lockedLiquidity.value;
+  market._currentWithdrawalCycleId = tryGetCurrentCycleId.value.toI32();
+  market._lockedLiquidityInWindow = tryLockedLiquidity.value;
   market.save();
 
   updateBorrowRate(manager);

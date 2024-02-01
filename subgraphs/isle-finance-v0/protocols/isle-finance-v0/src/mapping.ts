@@ -160,6 +160,8 @@ export function handleWithdrawalManagerInitialized(
   market.save();
 }
 
+// TODO: request withdrawal recording (WithdrawalProcessed + WithdrawalUpdated)
+
 /////////////////////
 //// Pool Events ////
 /////////////////////
@@ -668,6 +670,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   }
 
   const principal = tryLoanInfo.value.principal;
+  const receivableTokenId = tryLoanInfo.value.receivableTokenId; //TODO
 
   loan.market = Bytes.fromHexString(tryPool.value.toHexString());
   loan.loanManager = Bytes.fromHexString(event.address.toHexString());
@@ -675,6 +678,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   loan.gracePeriod = tryLoanInfo.value.gracePeriod;
   loan.isActive = true;
   loan.isDefaulted = false;
+  loan.receivableTokenId = receivableTokenId;
   loan.principal = principal;
   loan.interestRate = tryLoanInfo.value.interestRate;
   loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;

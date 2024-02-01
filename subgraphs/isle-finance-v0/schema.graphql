@@ -2109,6 +2109,9 @@ type _Loan @entity {
   " The repayment status of the loan "
   isDefaulted: Boolean
 
+  " The token ID of the receivable token"
+  receivableTokenId: BigInt
+
   " The principal amount of the loan "
   principal: BigInt
 

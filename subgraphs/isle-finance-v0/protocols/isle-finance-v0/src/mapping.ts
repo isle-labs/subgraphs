@@ -185,6 +185,42 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   }
   request.lockedShare = event.params.lockedShares_;
   request.state = "PENDING";
+
+  // find market
+  const tryAddressesProvider =
+    withdrawalManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value,
+  );
+  const tryGetPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (tryGetPoolConfigurator.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()],
+    );
+    return;
+  }
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    tryGetPoolConfigurator.value,
+  );
+  const tryPool = PoolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] PoolConfigurator contract {} does not have a pool",
+      [tryGetPoolConfigurator.value.toHexString()],
+    );
+    return;
+  }
+  request.market = tryPool.value;
+
   request.save();
 }
 

@@ -170,4 +170,6 @@ templates:
       eventHandlers:
         - event: Initialized(address,uint256,uint256)
           handler: handleWithdrawalManagerInitialized
+        - event: WithdrawalUpdated(indexed address,uint256,uint64,uint64)
+          handler: handleWithdrawalUpdated
       file: ./protocols/isle-finance-v0/src/mapping.ts

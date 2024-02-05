@@ -2127,6 +2127,38 @@ type _Loan @entity {
   " The timestamp of the loan maturity "
   maturityTimestamp: BigInt
 
-  " The transaction hash where the loan was created "
-  transactionCreated: Bytes!
+  " The timestamp of the loan creation "
+  createdTimestamp: BigInt!
 }
+
+enum _WithdrawalRequestState {
+  " The request is created and waiting for the next 2 cycle to be processed "
+  PENDING
+
+  " The request is processed and the tokens are withdrawn "
+  Withdrawn
+}
+
+type _WithdrawalRequest @entity {
+  " { Smart contract address of the withdrawalManager }{ Exit cycle ID } "
+  id: Bytes!
+
+  " The market this loan belongs to "
+  market: Market!
+
+  " The timestamp of the withdrawl request creation "
+  createdTimestamp: BigInt!
+
+  " amount of tokens to withdraw "
+  lockedShare: BigInt
+
+  " The exit cycle ID of the withdrawal request "
+  exitCycleId: BigInt
+
+  " state of the request " 
+  state: _WithdrawalRequestState
+}
+
+
+
+

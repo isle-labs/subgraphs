@@ -12,6 +12,7 @@ import {
 } from "../../../generated/PoolAddressesProvider/PoolAddressesProvider";
 import {
   Initialized as WithdrawalManagerInitialized,
+  WithdrawalUpdated,
   WithdrawalManager,
 } from "../../../generated/templates/WithdrawalManager/WithdrawalManager";
 import {
@@ -57,7 +58,11 @@ import {
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
 import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH } from "./constants";
-import { MarketDailySnapshot, _Loan } from "../../../generated/schema";
+import {
+  MarketDailySnapshot,
+  _Loan,
+  _WithdrawalRequest,
+} from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 
 ///////////////////////////////////
@@ -160,7 +165,25 @@ export function handleWithdrawalManagerInitialized(
   market.save();
 }
 
-// TODO: request withdrawal recording (WithdrawalProcessed + WithdrawalUpdated)
+// TODO: request withdrawal recording
+export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
+  const withdrawalManagerContract = WithdrawalManager.bind(event.address);
+  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
+  if (tryCurrentCycleId.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
+  const requestId = event.address.concat(exitCycleIdBytes);
+  const request = getOrCreateWithdrawalRequest(requestId, event);
+  request.exitCycleId = tryCurrentCycleId.value;
+  request.lockedShare = event.params.lockedShares_;
+  request.state = "PENDING";
+  request.save();
+}
 
 /////////////////////
 //// Pool Events ////
@@ -670,7 +693,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   }
 
   const principal = tryLoanInfo.value.principal;
-  const receivableTokenId = tryLoanInfo.value.receivableTokenId; //TODO
+  const receivableTokenId = tryLoanInfo.value.receivableTokenId;
 
   loan.market = Bytes.fromHexString(tryPool.value.toHexString());
   loan.loanManager = Bytes.fromHexString(event.address.toHexString());
@@ -1105,8 +1128,21 @@ function getOrCreateLoan(loanId: Bytes, event: ethereum.Event): _Loan {
   let loan = _Loan.load(loanId);
   if (!loan) {
     loan = new _Loan(loanId);
-    loan.transactionCreated = event.transaction.hash;
+    loan.createdTimestamp = event.block.timestamp;
     loan.save();
   }
   return loan;
+}
+
+function getOrCreateWithdrawalRequest(
+  requestId: Bytes,
+  event: ethereum.Event,
+): _WithdrawalRequest {
+  let request = _WithdrawalRequest.load(requestId);
+  if (!request) {
+    request = new _WithdrawalRequest(requestId);
+    request.createdTimestamp = event.block.timestamp;
+    request.save();
+  }
+  return request;
 }

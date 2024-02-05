@@ -2144,7 +2144,7 @@ type _WithdrawalRequest @entity {
   id: Bytes!
 
   " The market this loan belongs to "
-  market: Market!
+  market: Market
 
   " The timestamp of the withdrawl request creation "
   createdTimestamp: BigInt!

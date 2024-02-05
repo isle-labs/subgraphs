@@ -172,4 +172,6 @@ templates:
           handler: handleWithdrawalManagerInitialized
         - event: WithdrawalUpdated(indexed address,uint256,uint64,uint64)
           handler: handleWithdrawalUpdated
+        - event: WithdrawalProcessed(indexed address,uint256,uint256)
+          handler: handleWithdrawalProcessed
       file: ./protocols/isle-finance-v0/src/mapping.ts

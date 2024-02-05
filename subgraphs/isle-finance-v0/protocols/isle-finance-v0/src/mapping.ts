@@ -13,6 +13,7 @@ import {
 import {
   Initialized as WithdrawalManagerInitialized,
   WithdrawalUpdated,
+  WithdrawalProcessed,
   WithdrawalManager,
 } from "../../../generated/templates/WithdrawalManager/WithdrawalManager";
 import {
@@ -165,7 +166,6 @@ export function handleWithdrawalManagerInitialized(
   market.save();
 }
 
-// TODO: request withdrawal recording
 export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   const withdrawalManagerContract = WithdrawalManager.bind(event.address);
   const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
@@ -180,8 +180,28 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   const requestId = event.address.concat(exitCycleIdBytes);
   const request = getOrCreateWithdrawalRequest(requestId, event);
   request.exitCycleId = tryCurrentCycleId.value;
+  if (event.params.lockedShares_ == BIGINT_ZERO) {
+    return;
+  }
   request.lockedShare = event.params.lockedShares_;
   request.state = "PENDING";
+  request.save();
+}
+
+export function handleWithdrawalProcessed(event: WithdrawalProcessed): void {
+  const withdrawalManagerContract = WithdrawalManager.bind(event.address);
+  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
+  if (tryCurrentCycleId.reverted) {
+    log.error(
+      "[handleWithdrawalProcessed] WithdrawalManager contract {} does not have a currentCycleId",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
+  const requestId = event.address.concat(exitCycleIdBytes);
+  const request = getOrCreateWithdrawalRequest(requestId, event);
+  request.state = "WITHDRAWN";
   request.save();
 }
 

@@ -2155,10 +2155,6 @@ type _WithdrawalRequest @entity {
   " The exit cycle ID of the withdrawal request "
   exitCycleId: BigInt
 
-  " state of the request " 
+  " state of the request "
   state: _WithdrawalRequestState
 }
-
-
-
-

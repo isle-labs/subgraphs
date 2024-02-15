@@ -1065,6 +1065,8 @@ type Market @entity @regularPolling {
   _currentWithdrawalCycleId: Int
 
   _lockedLiquidityInWindow: BigInt
+
+  _withdrawalRequests: [_WithdrawalRequest!]! @derivedFrom(field: "market")
 }
 
 #################################
@@ -2154,6 +2156,9 @@ type _WithdrawalRequest @entity {
 
   " The exit cycle ID of the withdrawal request "
   exitCycleId: BigInt
+
+  "The account that requested the withdrawal"
+  withdrawer: Bytes
 
   " state of the request "
   state: _WithdrawalRequestState

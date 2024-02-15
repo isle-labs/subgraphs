@@ -176,13 +176,14 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
     );
     return;
   }
-  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
+  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32() + 2);
   const requestId = event.address.concat(exitCycleIdBytes);
   const request = getOrCreateWithdrawalRequest(requestId, event);
-  request.exitCycleId = tryCurrentCycleId.value;
+  request.exitCycleId = tryCurrentCycleId.value.plus(BigInt.fromI32(2));
   if (event.params.lockedShares_ == BIGINT_ZERO) {
     return;
   }
+  request.withdrawer = event.params.account_;
   request.lockedShare = event.params.lockedShares_;
   request.state = "PENDING";
 

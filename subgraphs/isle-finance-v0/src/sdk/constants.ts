@@ -288,3 +288,8 @@ export function activityCounter(
 /////////////////////////////
 
 export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+/////////////////////////////
+/////  Helper Constants  ////
+/////////////////////////////
+export const THREE_RECENT_CYCLES = 3;

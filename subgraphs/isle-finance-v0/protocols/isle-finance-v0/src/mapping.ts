@@ -14,6 +14,7 @@ import {
   Initialized as WithdrawalManagerInitialized,
   WithdrawalUpdated,
   WithdrawalProcessed,
+  WithdrawalCancelled,
   WithdrawalManager,
 } from "../../../generated/templates/WithdrawalManager/WithdrawalManager";
 import {
@@ -32,6 +33,7 @@ import {
   LoanRepaid,
   FeesPaid,
   IssuanceParamsUpdated,
+  DefaultTriggered,
   LoanManager,
 } from "../../../generated/templates/LoanManager/LoanManager";
 import {
@@ -54,6 +56,7 @@ import {
   InterestRateType,
   INT_ZERO,
   SECONDS_PER_DAY,
+  THREE_RECENT_CYCLES,
   TokenType,
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
@@ -63,6 +66,7 @@ import {
   MarketDailySnapshot,
   _Loan,
   _WithdrawalRequest,
+  _ExitConfigs,
 } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 
@@ -70,7 +74,6 @@ import { ERC20 } from "../../../generated/templates/Pool/ERC20";
 //// Addresses Provider Events ////
 ///////////////////////////////////
 
-//
 // Pool-side contracts created event
 export function handleProxyCreated(event: ProxyCreated): void {
   // create which template depends on the event.params.id
@@ -161,8 +164,23 @@ export function handleWithdrawalManagerInitialized(
   const market = manager.getMarket();
   market._withdrawalManager = Bytes.fromHexString(event.address.toHexString());
 
-  market._cycleDuration = tryGetCurrentConfig.value.cycleDuration;
-  market._windowDuration = tryGetCurrentConfig.value.windowDuration;
+  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
+  if (tryCurrentCycleId.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const configId = Bytes.fromHexString(event.address.toHexString()).concat(
+    Bytes.fromI32(tryCurrentCycleId.value.toI32()),
+  );
+  const exitConfig = getOrCreateExitConfigs(configId);
+
+  exitConfig.exitCycleId = tryCurrentCycleId.value.toI32();
+  exitConfig.cycleDuration = tryGetCurrentConfig.value.cycleDuration.toI32();
+  exitConfig.windowDuration = tryGetCurrentConfig.value.windowDuration.toI32();
+  exitConfig.save();
   market.save();
 }
 
@@ -176,16 +194,48 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
     );
     return;
   }
-  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32() + 2);
-  const requestId = event.address.concat(exitCycleIdBytes);
-  const request = getOrCreateWithdrawalRequest(requestId, event);
-  request.exitCycleId = tryCurrentCycleId.value.plus(BigInt.fromI32(2));
+
+  // if the lockedShares is 0, then the event is triggered by normal processExit() call
   if (event.params.lockedShares_ == BIGINT_ZERO) {
     return;
   }
+
+  // use windowStart current timestamp, and currentConfig to calculate the exitCycleId
+  const windowStart = event.params.windowStart_;
+
+  const tryGetCurrentConfig = withdrawalManagerContract.try_getCurrentConfig();
+  if (tryGetCurrentConfig.reverted) {
+    log.error(
+      "[handleWithdrawalUpdated] Unable to retrieve current configuration for contract {}",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+
+  const initialCycleId = tryGetCurrentConfig.value.initialCycleId;
+  const initialCycleTime = tryGetCurrentConfig.value.initialCycleTime;
+  const cycleDuration = tryGetCurrentConfig.value.cycleDuration;
+
+  // Calculate exitCycleId
+  const exitCycleId = windowStart
+    .minus(initialCycleTime)
+    .div(cycleDuration)
+    .plus(initialCycleId);
+
+  // compared with the currentCycleId + 2, if not equal, then it's a partial withdrawal
+  if (exitCycleId != tryCurrentCycleId.value.plus(BigInt.fromI32(2))) {
+    return;
+  }
+
+  const exitCycleIdBytes = Bytes.fromI32(exitCycleId.toI32());
+  const requestId = event.address
+    .concat(exitCycleIdBytes)
+    .concat(event.params.account_);
+  const request = getOrCreateWithdrawalRequest(requestId, event);
+  request.exitCycleId = tryCurrentCycleId.value.plus(BigInt.fromI32(2));
+
   request.withdrawer = event.params.account_;
   request.lockedShare = event.params.lockedShares_;
-  request.state = "PENDING";
 
   // find market
   const tryAddressesProvider =
@@ -236,9 +286,30 @@ export function handleWithdrawalProcessed(event: WithdrawalProcessed): void {
     return;
   }
   const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
-  const requestId = event.address.concat(exitCycleIdBytes);
+  const requestId = event.address
+    .concat(exitCycleIdBytes)
+    .concat(event.params.account_);
   const request = getOrCreateWithdrawalRequest(requestId, event);
-  request.state = "WITHDRAWN";
+  request.withdrawnShare = event.params.sharesToRedeem_;
+  request.save();
+}
+
+export function handleWithdrawalCancelled(event: WithdrawalCancelled): void {
+  const withdrawalManagerContract = WithdrawalManager.bind(event.address);
+  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
+  if (tryCurrentCycleId.reverted) {
+    log.error(
+      "[handleWithdrawalCancelled] WithdrawalManager contract {} does not have a currentCycleId",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
+  const requestId = event.address
+    .concat(exitCycleIdBytes)
+    .concat(event.params.account_);
+  const request = getOrCreateWithdrawalRequest(requestId, event);
+  request.lockedShare = BIGINT_ZERO;
   request.save();
 }
 
@@ -936,6 +1007,39 @@ export function handleIssuanceParamsUpdated(
   market.save();
 }
 
+// handle loan default
+export function handleDefaultTriggered(event: DefaultTriggered): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+  if (!loan.market) {
+    log.error("[handleDefaultTriggered] Loan {} does not have a market", [
+      event.address.toHexString(),
+    ]);
+    return;
+  }
+  const poolContract = Pool.bind(Address.fromBytes(loan.market!));
+  const tryAsset = poolContract.try_asset();
+  if (tryAsset.reverted) {
+    log.error(
+      "[handleDefaultTriggered] Pool contract {} does not have an asset",
+      [loan.market!.toHexString()],
+    );
+    return;
+  }
+
+  const manager = new DataManager(
+    loan.market!,
+    tryAsset.value,
+    event,
+    getProtocolData(),
+  );
+  updateMarketAndProtocol(manager, event);
+  loan.isActive = false;
+  loan.isDefaulted = true;
+  loan.save();
+}
+
 /////////////////
 //// Helpers ////
 /////////////////
@@ -958,16 +1062,28 @@ function updateMarketAndProtocol(
     Address.fromBytes(market._loanManager!),
   );
   const poolContract = Pool.bind(Address.fromBytes(market.id));
+  const poolConfiguratorContract = PoolConfigurator.bind(
+    Address.fromBytes(market._poolConfigurator!),
+  );
 
-  const tryBalance = poolContract.try_totalAssets(); // input tokens
-  const tryTotalSupply = poolContract.try_totalSupply(); // output tokens
-  if (tryBalance.reverted || tryTotalSupply.reverted) {
+  const tryTotalAssets = poolConfiguratorContract.try_totalAssets(); // input tokens
+  if (tryTotalAssets.reverted) {
     log.error(
-      "[updateMarketAndProtocol] Pool contract {} does not have a totalAssets or totalSupply",
+      "[updateMarketAndProtocol] PoolConfigurator contract {} does not have a totalAssets",
+      [market._poolConfigurator!.toHexString()],
+    );
+    return;
+  }
+
+  const tryTotalSupply = poolContract.try_totalSupply(); // output tokens
+  if (tryTotalSupply.reverted) {
+    log.error(
+      "[updateMarketAndProtocol] Pool contract {} does not have a totalSupply",
       [market.id.toHexString()],
     );
     return;
   }
+
   const inputTokenPriceUSD = BIGDECIMAL_ONE;
   const tryAUM = loanManagerContract.try_assetsUnderManagement();
   if (tryAUM.reverted) {
@@ -978,9 +1094,10 @@ function updateMarketAndProtocol(
     return;
   }
 
+  // TODO: consider the decimal offset
   const exchangeRate = safeDiv(
-    tryTotalSupply.value.toBigDecimal(),
-    tryBalance.value.toBigDecimal(),
+    tryTotalAssets.value.toBigDecimal().plus(BIGDECIMAL_ONE),
+    tryTotalSupply.value.toBigDecimal().plus(BIGDECIMAL_ONE),
   );
 
   market.outputTokenSupply = tryTotalSupply.value;
@@ -989,7 +1106,7 @@ function updateMarketAndProtocol(
 
   manager.updateMarketAndProtocolData(
     inputTokenPriceUSD,
-    tryBalance.value,
+    tryTotalAssets.value,
     tryAUM.value,
     null,
     null,
@@ -1036,6 +1153,27 @@ function updateMarketAndProtocol(
       [market._withdrawalManager!.toHexString()],
     );
     return;
+  }
+
+  // for the next 3 cycles, update the exit configs
+  for (let i = 0; i < THREE_RECENT_CYCLES; i++) {
+    const cycleIdBytes = Bytes.fromI32(tryGetCurrentCycleId.value.toI32() + i);
+    const configId = market._withdrawalManager!.concat(cycleIdBytes);
+    const exitConfig = getOrCreateExitConfigs(configId);
+    const id = tryGetCurrentCycleId.value.plus(BigInt.fromI32(i));
+    exitConfig.exitCycleId = id.toI32();
+
+    const tryGetConfigAtId = withdrawalManagerContract.try_getConfigAtId(id);
+    if (tryGetConfigAtId.reverted) {
+      log.error(
+        "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a getConfigAtId",
+        [market._withdrawalManager!.toHexString()],
+      );
+      return;
+    }
+    exitConfig.cycleDuration = tryGetConfigAtId.value.cycleDuration.toI32();
+    exitConfig.windowDuration = tryGetConfigAtId.value.windowDuration.toI32();
+    exitConfig.save();
   }
 
   const tryLockedLiquidity = withdrawalManagerContract.try_lockedLiquidity();
@@ -1202,4 +1340,13 @@ function getOrCreateWithdrawalRequest(
     request.save();
   }
   return request;
+}
+
+function getOrCreateExitConfigs(configId: Bytes): _ExitConfigs {
+  let config = _ExitConfigs.load(configId);
+  if (!config) {
+    config = new _ExitConfigs(configId);
+    config.save();
+  }
+  return config;
 }

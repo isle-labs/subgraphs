@@ -1102,6 +1102,7 @@ function updateMarketAndProtocol(
 
   market.outputTokenSupply = tryTotalSupply.value;
   market.outputTokenPriceUSD = inputTokenPriceUSD.times(exchangeRate); // use exchange rate to get price of output token
+  market.exchangeRate = exchangeRate;
   market.save();
 
   manager.updateMarketAndProtocolData(
@@ -1173,6 +1174,7 @@ function updateMarketAndProtocol(
     }
     exitConfig.cycleDuration = tryGetConfigAtId.value.cycleDuration.toI32();
     exitConfig.windowDuration = tryGetConfigAtId.value.windowDuration.toI32();
+    exitConfig.market = market.id;
     exitConfig.save();
   }
 

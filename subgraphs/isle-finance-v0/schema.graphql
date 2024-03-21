@@ -1056,15 +1056,13 @@ type Market @entity @regularPolling {
   " Admin fee rate of the market. e.g. 0.1e6 "
   _adminFee: BigInt
 
-  " Cycle duration for loan withdrawal. e.g. 14 days = 14 * 24 * 60 * 60 "
-  _cycleDuration: BigInt
-
-  " Window duration for loan withdrawal. e.g. 4 day = 4 * 24 * 60 * 60 "
-  _windowDuration: BigInt
-
   _currentWithdrawalCycleId: Int
 
+  _exitConfigs: [_ExitConfigs!]! @derivedFrom(field: "market")
+
   _lockedLiquidityInWindow: BigInt
+
+  _withdrawalRequests: [_WithdrawalRequest!]! @derivedFrom(field: "market")
 }
 
 #################################
@@ -2127,6 +2125,46 @@ type _Loan @entity {
   " The timestamp of the loan maturity "
   maturityTimestamp: BigInt
 
-  " The transaction hash where the loan was created "
-  transactionCreated: Bytes!
+  " The timestamp of the loan creation "
+  createdTimestamp: BigInt!
+}
+
+type _WithdrawalRequest @entity {
+  " { Smart contract address of the withdrawalManager }{ Exit cycle ID }{ Withdrawer address } "
+  id: Bytes!
+
+  " The market this loan belongs to "
+  market: Market
+
+  " The timestamp of the withdrawl request creation "
+  createdTimestamp: BigInt!
+
+  " amount of tokens to withdraw "
+  lockedShare: BigInt
+
+  " amount of tokens actually withdrawn "
+  withdrawnShare: BigInt
+
+  " The exit cycle ID of the withdrawal request "
+  exitCycleId: BigInt
+
+  "The account that requested the withdrawal"
+  withdrawer: Bytes
+}
+
+type _ExitConfigs @entity @regularPolling {
+  " { Smart contract address of the withdrawalManager }{ Exit cycle ID } "
+  id: Bytes!
+
+  " The market that this exit config is used for "
+  market: Market
+
+  " The exit cycle ID "
+  exitCycleId: Int!
+
+  " Cycle duration for loan withdrawal. e.g. 14 days = 14 * 24 * 60 * 60 "
+  cycleDuration: Int
+
+  " Window duration for loan withdrawal. e.g. 4 day = 4 * 24 * 60 * 60 "
+  windowDuration: Int
 }

@@ -682,7 +682,7 @@ export function handleLoanManagerInitialized(
   const loanManagerContract = LoanManager.bind(event.address);
 
   // get the asset, i.e. the input token
-  const tryAsset = loanManagerContract.try_fundsAsset();
+  const tryAsset = loanManagerContract.try_asset();
   if (tryAsset.reverted) {
     log.error(
       "[handleLoanManagerInitialized] LoanManager contract {} does not have an asset",

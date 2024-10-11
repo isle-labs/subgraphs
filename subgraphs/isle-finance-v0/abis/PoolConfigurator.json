@@ -1,818 +1,1052 @@
 [
   {
+    "type": "constructor",
     "inputs": [
       {
-        "internalType": "contract IPoolAddressesProvider",
         "name": "provider_",
-        "type": "address"
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  { "inputs": [], "name": "AddressesProviderZeroAddress", "type": "error" },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "asset", "type": "address" },
-      { "internalType": "address", "name": "from", "type": "address" },
-      { "internalType": "address", "name": "to", "type": "address" },
-      { "internalType": "uint256", "name": "amount", "type": "uint256" }
-    ],
-    "name": "ERC20TransferFailed",
-    "type": "error"
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [
-      { "internalType": "address", "name": "provider", "type": "address" },
-      {
-        "internalType": "address",
-        "name": "expectedProvider",
-        "type": "address"
-      }
-    ],
-    "name": "InvalidAddressesProvider",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "caller", "type": "address" },
-      { "internalType": "address", "name": "expectedCaller", "type": "address" }
-    ],
-    "name": "InvalidCaller",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "caller_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_CallerNotGovernor",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "expectedCaller_",
-        "type": "address"
-      },
-      { "internalType": "address", "name": "caller_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_CallerNotLoanManager",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "caller_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_CallerNotPoolAdmin",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "caller_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_CallerNotPoolAdminOrGovernor",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "caller_", "type": "address" },
-      { "internalType": "uint256", "name": "amount_", "type": "uint256" }
-    ],
-    "name": "PoolConfigurator_DepositCoverFailed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PoolConfigurator_InsufficientCover",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "PoolConfigurator_InsufficientLiquidity",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "poolAdmin_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_InvalidPoolAdmin",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "asset_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_InvalidPoolAsset",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "owner_", "type": "address" },
-      { "internalType": "address", "name": "spender_", "type": "address" }
-    ],
-    "name": "PoolConfigurator_NoAllowance",
-    "type": "error"
-  },
-  { "inputs": [], "name": "PoolConfigurator_Paused", "type": "error" },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "amount_", "type": "uint256" }
-    ],
-    "name": "PoolConfigurator_PoolApproveWithdrawalManagerFailed",
-    "type": "error"
-  },
-  { "inputs": [], "name": "PoolConfigurator_PoolSupplyZero", "type": "error" },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "recipient_", "type": "address" },
-      { "internalType": "uint256", "name": "amount_", "type": "uint256" }
-    ],
-    "name": "PoolConfigurator_WithdrawCoverFailed",
-    "type": "error"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "adminFee_",
-        "type": "uint256"
-      }
-    ],
-    "name": "AdminFeeSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint96",
-        "name": "baseRate_",
-        "type": "uint96"
-      }
-    ],
-    "name": "BaseRateSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "buyer_",
-        "type": "address"
-      }
-    ],
-    "name": "BuyerSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount_",
-        "type": "uint256"
-      }
-    ],
-    "name": "CoverDeposited",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "toPool_",
-        "type": "uint256"
-      }
-    ],
-    "name": "CoverLiquidated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount_",
-        "type": "uint256"
-      }
-    ],
-    "name": "CoverWithdrawn",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "poolAdmin_",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "asset_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "pool_",
-        "type": "address"
-      }
-    ],
-    "name": "Initialized",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint24",
-        "name": "maxCoverLiquidation_",
-        "type": "uint24"
-      }
-    ],
-    "name": "MaxCoverLiquidationSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint104",
-        "name": "minCover_",
-        "type": "uint104"
-      }
-    ],
-    "name": "MinCoverSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isOpenToPublic_",
-        "type": "bool"
-      }
-    ],
-    "name": "OpenToPublicSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint104",
-        "name": "poolLimit_",
-        "type": "uint104"
-      }
-    ],
-    "name": "PoolLimitSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "redeemableShares_",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "resultingAssets_",
-        "type": "uint256"
-      }
-    ],
-    "name": "RedeemProcessed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "shares_",
-        "type": "uint256"
-      }
-    ],
-    "name": "RedeemRequested",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "owner_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "shares_",
-        "type": "uint256"
-      }
-    ],
-    "name": "SharesRemoved",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "oldAdmin_",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newAdmin_",
-        "type": "address"
-      }
-    ],
-    "name": "TransferAdmin",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "lender_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isValid_",
-        "type": "bool"
-      }
-    ],
-    "name": "ValidLenderSet",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "seller_",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "isValid_",
-        "type": "bool"
-      }
-    ],
-    "name": "ValidSellerSet",
-    "type": "event"
-  },
-  {
-    "inputs": [],
+    "type": "function",
     "name": "ADDRESSES_PROVIDER",
+    "inputs": [],
     "outputs": [
       {
-        "internalType": "contract IPoolAddressesProvider",
         "name": "",
-        "type": "address"
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "HUNDRED_PERCENT",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "POOL_CONFIGURATOR_REVISION",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "admin",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "adminFee",
+    "inputs": [],
     "outputs": [
-      { "internalType": "uint24", "name": "adminFee_", "type": "uint24" }
+      {
+        "name": "adminFee_",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "asset",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
-    "name": "baseRate",
     "outputs": [
-      { "internalType": "uint96", "name": "baseRate_", "type": "uint96" }
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [],
+    "type": "function",
     "name": "buyer",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint256", "name": "amount_", "type": "uint256" }
-    ],
+    "type": "function",
     "name": "depositCover",
+    "inputs": [
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "getRevision",
     "inputs": [],
+    "outputs": [
+      {
+        "name": "revision_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
     "name": "hasSufficientCover",
+    "inputs": [],
     "outputs": [
-      { "internalType": "bool", "name": "hasSufficientCover_", "type": "bool" }
+      {
+        "name": "hasSufficientCover_",
+        "type": "bool",
+        "internalType": "bool"
+      }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      {
-        "internalType": "contract IPoolAddressesProvider",
-        "name": "provider_",
-        "type": "address"
-      },
-      { "internalType": "address", "name": "poolAdmin_", "type": "address" },
-      { "internalType": "address", "name": "asset_", "type": "address" },
-      { "internalType": "string", "name": "name_", "type": "string" },
-      { "internalType": "string", "name": "symbol_", "type": "string" }
-    ],
+    "type": "function",
     "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "isLender",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "name": "isSeller",
-    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "maxCoverLiquidation",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "uint24",
-        "name": "maxCoverLiquidation_",
-        "type": "uint24"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "receiver_", "type": "address" }
-    ],
-    "name": "maxDeposit",
-    "outputs": [
-      { "internalType": "uint256", "name": "maxAssets_", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "receiver_", "type": "address" }
-    ],
-    "name": "maxMint",
-    "outputs": [
-      { "internalType": "uint256", "name": "maxShares_", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "owner_", "type": "address" }
-    ],
-    "name": "maxRedeem",
-    "outputs": [
-      { "internalType": "uint256", "name": "maxShares_", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "minCover",
-    "outputs": [
-      { "internalType": "uint104", "name": "minCover_", "type": "uint104" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "openToPublic",
-    "outputs": [
-      { "internalType": "bool", "name": "openToPublic_", "type": "bool" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pool",
-    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "poolCover",
-    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "poolLimit",
-    "outputs": [
-      { "internalType": "uint104", "name": "poolLimit_", "type": "uint104" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "owner_", "type": "address" },
-      { "internalType": "uint256", "name": "shares_", "type": "uint256" }
-    ],
-    "name": "previewRedeem",
-    "outputs": [
-      { "internalType": "uint256", "name": "assets_", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "shares_", "type": "uint256" },
-      { "internalType": "address", "name": "owner_", "type": "address" },
-      { "internalType": "address", "name": "sender_", "type": "address" }
-    ],
-    "name": "processRedeem",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "redeemableShares_",
-        "type": "uint256"
+        "name": "provider_",
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
       },
       {
-        "internalType": "uint256",
-        "name": "resultingAssets_",
-        "type": "uint256"
+        "name": "poolAdmin_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "asset_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "name_",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "symbol_",
+        "type": "string",
+        "internalType": "string"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "isLender",
     "inputs": [
-      { "internalType": "uint256", "name": "shares_", "type": "uint256" },
-      { "internalType": "address", "name": "owner_", "type": "address" }
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    "name": "removeShares",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "sharesReturned_",
-        "type": "uint256"
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
       }
     ],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
-    "inputs": [
-      { "internalType": "uint256", "name": "principal_", "type": "uint256" }
-    ],
-    "name": "requestFunds",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint256", "name": "shares_", "type": "uint256" },
-      { "internalType": "address", "name": "owner_", "type": "address" },
-      { "internalType": "address", "name": "sender_", "type": "address" }
-    ],
-    "name": "requestRedeem",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint24", "name": "adminFee_", "type": "uint24" }
-    ],
-    "name": "setAdminFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint96", "name": "baseRate_", "type": "uint96" }
-    ],
-    "name": "setBaseRate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "buyer_", "type": "address" }
-    ],
-    "name": "setBuyer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
+    "type": "function",
+    "name": "isSeller",
     "inputs": [
       {
-        "internalType": "uint24",
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "maxCoverLiquidation",
+    "inputs": [],
+    "outputs": [
+      {
         "name": "maxCoverLiquidation_",
-        "type": "uint24"
+        "type": "uint24",
+        "internalType": "uint24"
       }
     ],
-    "name": "setMaxCoverLiquidation",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "maxDeposit",
     "inputs": [
-      { "internalType": "uint104", "name": "minCover_", "type": "uint104" }
+      {
+        "name": "receiver_",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    "name": "setMinCover",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "bool", "name": "isOpenToPublic_", "type": "bool" }
-    ],
-    "name": "setOpenToPublic",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint104", "name": "poolLimit_", "type": "uint104" }
-    ],
-    "name": "setPoolLimit",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "lender_", "type": "address" },
-      { "internalType": "bool", "name": "isValid_", "type": "bool" }
-    ],
-    "name": "setValidLender",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "seller_", "type": "address" },
-      { "internalType": "bool", "name": "isValid_", "type": "bool" }
-    ],
-    "name": "setValidSeller",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "totalAssets",
-    "outputs": [
-      { "internalType": "uint256", "name": "totalAssets_", "type": "uint256" }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "address", "name": "newAdmin_", "type": "address" }
-    ],
-    "name": "transferAdmin",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      { "internalType": "uint16", "name": "loanId_", "type": "uint16" }
-    ],
-    "name": "triggerDefault",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "unrealizedLosses",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "unrealizedLosses_",
-        "type": "uint256"
+        "name": "maxAssets_",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "stateMutability": "view"
   },
   {
+    "type": "function",
+    "name": "maxMint",
     "inputs": [
-      { "internalType": "uint256", "name": "amount_", "type": "uint256" },
-      { "internalType": "address", "name": "recipient_", "type": "address" }
+      {
+        "name": "receiver_",
+        "type": "address",
+        "internalType": "address"
+      }
     ],
-    "name": "withdrawCover",
+    "outputs": [
+      {
+        "name": "maxShares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "maxRedeem",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "maxShares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "minCover",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "minCover_",
+        "type": "uint104",
+        "internalType": "uint104"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "openToPublic",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "openToPublic_",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pool",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "poolCover",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "poolLimit",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "poolLimit_",
+        "type": "uint104",
+        "internalType": "uint104"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "previewRedeem",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "assets_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "processRedeem",
+    "inputs": [
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "sender_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "redeemableShares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "resultingAssets_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "removeShares",
+    "inputs": [
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "sharesReturned_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "requestFunds",
+    "inputs": [
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "requestRedeem",
+    "inputs": [
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setAdminFee",
+    "inputs": [
+      {
+        "name": "adminFee_",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setBuyer",
+    "inputs": [
+      {
+        "name": "buyer_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMaxCoverLiquidation",
+    "inputs": [
+      {
+        "name": "maxCoverLiquidation_",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setMinCover",
+    "inputs": [
+      {
+        "name": "minCover_",
+        "type": "uint104",
+        "internalType": "uint104"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setOpenToPublic",
+    "inputs": [
+      {
+        "name": "isOpenToPublic_",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setPoolLimit",
+    "inputs": [
+      {
+        "name": "poolLimit_",
+        "type": "uint104",
+        "internalType": "uint104"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setValidLender",
+    "inputs": [
+      {
+        "name": "lender_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "isValid_",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "setValidSeller",
+    "inputs": [
+      {
+        "name": "seller_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "isValid_",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "totalAssets",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "totalAssets_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transferAdmin",
+    "inputs": [
+      {
+        "name": "newAdmin_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "triggerDefault",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "unrealizedLosses",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "unrealizedLosses_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "withdrawCover",
+    "inputs": [
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "recipient_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "AdminFeeSet",
+    "inputs": [
+      {
+        "name": "adminFee_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BuyerSet",
+    "inputs": [
+      {
+        "name": "buyer_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CoverDeposited",
+    "inputs": [
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CoverLiquidated",
+    "inputs": [
+      {
+        "name": "toPool_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CoverWithdrawn",
+    "inputs": [
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Initialized",
+    "inputs": [
+      {
+        "name": "poolAdmin_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "asset_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "pool_",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MaxCoverLiquidationSet",
+    "inputs": [
+      {
+        "name": "maxCoverLiquidation_",
+        "type": "uint24",
+        "indexed": false,
+        "internalType": "uint24"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "MinCoverSet",
+    "inputs": [
+      {
+        "name": "minCover_",
+        "type": "uint104",
+        "indexed": false,
+        "internalType": "uint104"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OpenToPublicSet",
+    "inputs": [
+      {
+        "name": "isOpenToPublic_",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PoolLimitSet",
+    "inputs": [
+      {
+        "name": "poolLimit_",
+        "type": "uint104",
+        "indexed": false,
+        "internalType": "uint104"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RedeemProcessed",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "redeemableShares_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "resultingAssets_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "RedeemRequested",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SharesRemoved",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "shares_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TransferAdmin",
+    "inputs": [
+      {
+        "name": "oldAdmin_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newAdmin_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ValidLenderSet",
+    "inputs": [
+      {
+        "name": "lender_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "isValid_",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ValidSellerSet",
+    "inputs": [
+      {
+        "name": "seller_",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "isValid_",
+        "type": "bool",
+        "indexed": false,
+        "internalType": "bool"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AddressesProviderZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidAddressesProvider",
+    "inputs": [
+      {
+        "name": "provider",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "expectedProvider",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "InvalidCaller",
+    "inputs": [
+      {
+        "name": "caller",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "expectedCaller",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_CallerNotGovernor",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_CallerNotLoanManager",
+    "inputs": [
+      {
+        "name": "expectedCaller_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_CallerNotPoolAdmin",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_CallerNotPoolAdminOrGovernor",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_InsufficientCover",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_InsufficientLiquidity",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_InvalidPoolAdmin",
+    "inputs": [
+      {
+        "name": "poolAdmin_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_InvalidPoolAsset",
+    "inputs": [
+      {
+        "name": "asset_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_NoAllowance",
+    "inputs": [
+      {
+        "name": "owner_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "spender_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_Paused",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PoolConfigurator_PoolSupplyZero",
+    "inputs": []
   }
 ]

@@ -61,7 +61,7 @@ import {
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH } from "./constants";
+import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH, MONTH_IN_YEAR } from "./constants";
 import {
   MarketDailySnapshot,
   _Loan,
@@ -1257,6 +1257,7 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // update supply rate using interest from the last 30 days
   let totalInterest = BIGDECIMAL_ZERO;
   let days = event.block.timestamp.toI32() / SECONDS_PER_DAY;
+  let hasRevenueDays = 0;
 
   for (let i = 0; i < DAYS_IN_MONTH; i++) {
     const snapshotID = market.id.concat(Bytes.fromI32(days));
@@ -1265,6 +1266,7 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
       totalInterest = totalInterest.plus(
         thisDailyMarketSnapshot.dailySupplySideRevenueUSD,
       );
+      hasRevenueDays++;
     }
     // decrement days
     days--;
@@ -1272,10 +1274,24 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // catch divide by zero
   if (market.totalDepositBalanceUSD.equals(BIGDECIMAL_ZERO)) return;
 
+  // If hasRevenueDays(the actual number of days with revenue) is less than 30,
+  // divide the totalInterest by thasRevenueDays, then multiply by 30 to get the monthly interest rate.
+  if (hasRevenueDays > 0 && hasRevenueDays < DAYS_IN_MONTH) {
+    totalInterest = totalInterest.times(
+      new BigDecimal(BigInt.fromI32(DAYS_IN_MONTH / hasRevenueDays))
+    );
+  }
+
+  // Multiply the monthly interest rate by 12 to get the APR.
+  totalInterest = totalInterest.times(
+    new BigDecimal(BigInt.fromI32(MONTH_IN_YEAR))
+  );
+
   const supplyRate = safeDiv(
     totalInterest,
     market.totalDepositBalanceUSD,
   ).times(exponentToBigDecimal(2)); // E.g. 5.21% should be stored as 5.21
+
   manager.getOrUpdateRate(
     InterestRateSide.LENDER,
     InterestRateType.VARIABLE,

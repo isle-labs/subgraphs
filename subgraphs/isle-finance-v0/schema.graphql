@@ -26,6 +26,7 @@ enum Network {
   GNOSIS
   BASE
   _SEPOLIA
+  _PLUME_TESTNET
 }
 
 enum ProtocolType {
@@ -2160,7 +2161,7 @@ type _ExitConfigs @entity @regularPolling {
   market: Market
 
   " The exit cycle ID "
-  exitCycleId: Int!
+  exitCycleId: Int
 
   " Cycle duration for loan withdrawal. e.g. 14 days = 14 * 24 * 60 * 60 "
   cycleDuration: Int

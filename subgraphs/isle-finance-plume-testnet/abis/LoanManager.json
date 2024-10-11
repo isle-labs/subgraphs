@@ -1048,17 +1048,6 @@
   },
   {
     "type": "error",
-    "name": "LoanManager_CallerNotSeller",
-    "inputs": [
-      {
-        "name": "expectedSeller_",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
     "name": "LoanManager_InvalidReceivable",
     "inputs": [
       {
@@ -1078,6 +1067,11 @@
         "internalType": "uint16"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_LoanNotFunded",
+    "inputs": []
   },
   {
     "type": "error",

@@ -228,11 +228,6 @@
         "name": "resultingAssets_",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "partialLiquidity_",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "stateMutability": "view"

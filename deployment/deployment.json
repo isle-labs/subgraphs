@@ -3174,8 +3174,8 @@
         },
         "services": {
           "hosted-service": {
-            "slug": "isle_sepolia",
-            "query-id": "isle_sepolia"
+            "slug": "isle_base_sepolia",
+            "query-id": "isle_base_sepolia"
           }
         }
       },
@@ -3210,7 +3210,7 @@
     "project": "isle",
     "deployments": {
       "isle-finance-v0-plume-testnet": {
-        "network": "plume-testnet",
+        "network": "sepolia",
         "status": "dev",
         "versions": {
           "schema": "3.1.0",
@@ -3226,8 +3226,30 @@
         },
         "services": {
           "hosted-service": {
-            "slug": "isle_plume-testnet",
-            "query-id": "isle_plume-testnet"
+            "slug": "isle-plume-testnet",
+            "query-id": "isle-plume-testnet"
+          }
+        }
+      },
+      "isle-finance-v0-plume-devnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v0.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle-plume-devnet",
+            "query-id": "isle-plume-devnet"
           }
         }
       }

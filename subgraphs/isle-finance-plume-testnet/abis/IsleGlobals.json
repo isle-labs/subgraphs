@@ -1,6 +1,20 @@
 [
   {
     "type": "function",
+    "name": "acceptGovernor",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "cancelPendingGovenor",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "getRevision",
     "inputs": [],
     "outputs": [
@@ -196,6 +210,32 @@
   },
   {
     "type": "function",
+    "name": "nominateGovernor",
+    "inputs": [
+      {
+        "name": "newGovernor_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "pendingGovernor",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "protocolFee",
     "inputs": [],
     "outputs": [
@@ -369,19 +409,6 @@
   },
   {
     "type": "function",
-    "name": "transferGovernor",
-    "inputs": [
-      {
-        "name": "newGovernor",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "upgradeTo",
     "inputs": [
       {
@@ -413,6 +440,25 @@
   },
   {
     "type": "event",
+    "name": "AcceptGovernor",
+    "inputs": [
+      {
+        "name": "oldGovernor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "newGovernor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "AdminChanged",
     "inputs": [
       {
@@ -436,6 +482,19 @@
     "inputs": [
       {
         "name": "beacon",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CancelPendingGovernor",
+    "inputs": [
+      {
+        "name": "oldPendingGovernor",
         "type": "address",
         "indexed": true,
         "internalType": "address"
@@ -533,6 +592,25 @@
   },
   {
     "type": "event",
+    "name": "NominateGovernor",
+    "inputs": [
+      {
+        "name": "governor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "pendingGovernor",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "ProtocolFeeSet",
     "inputs": [
       {
@@ -559,25 +637,6 @@
         "type": "bool",
         "indexed": false,
         "internalType": "bool"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TransferGovernor",
-    "inputs": [
-      {
-        "name": "oldGovernor",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newGovernor",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
       }
     ],
     "anonymous": false
@@ -670,6 +729,17 @@
   },
   {
     "type": "error",
+    "name": "Globals_CallerNotPendingGovernor",
+    "inputs": [
+      {
+        "name": "pendingGovernor_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
     "name": "Globals_InvalidVault",
     "inputs": [
       {
@@ -678,5 +748,10 @@
         "internalType": "address"
       }
     ]
+  },
+  {
+    "type": "error",
+    "name": "GovernorZeroAddress",
+    "inputs": []
   }
 ]

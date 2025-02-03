@@ -134,6 +134,9 @@ export class DataManager {
       _market.liquidationCount = INT_ZERO;
       _market.transferCount = INT_ZERO;
       _market.flashloanCount = INT_ZERO;
+      _market.variableBorrowedTokenBalance = BIGINT_ZERO;
+      _market.supplyCap = BIGINT_ZERO;
+      _market._lockedLiquidityInWindow = BIGINT_ZERO;
 
       _market.cumulativeUniqueUsers = INT_ZERO;
       _market.cumulativeUniqueDepositors = INT_ZERO;
@@ -911,11 +914,8 @@ export class DataManager {
     if (exchangeRate) {
       this.market.exchangeRate = exchangeRate;
     }
-    const vBorrowAmount = this.market.variableBorrowedTokenBalance
-      ? this.market
-          .variableBorrowedTokenBalance!.toBigDecimal()
-          .div(mantissaFactorBD)
-      : BIGDECIMAL_ZERO;
+    const vBorrowAmount = this.market.variableBorrowedTokenBalance.toBigDecimal()
+      .div(mantissaFactorBD);
     const sBorrowAmount = this.market.stableBorrowedTokenBalance
       ? this.market
           .stableBorrowedTokenBalance!.toBigDecimal()

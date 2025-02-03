@@ -61,7 +61,7 @@ import {
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH } from "./constants";
+import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH, MONTH_IN_YEAR } from "./constants";
 import {
   MarketDailySnapshot,
   _Loan,
@@ -1257,8 +1257,9 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // update supply rate using interest from the last 30 days
   let totalInterest = BIGDECIMAL_ZERO;
   let days = event.block.timestamp.toI32() / SECONDS_PER_DAY;
+  let snapshotCount: number = Math.min(market.dailySnapshots.load().length, DAYS_IN_MONTH);
 
-  for (let i = 0; i < DAYS_IN_MONTH; i++) {
+  for (let i = 0; i < snapshotCount; i++) {
     const snapshotID = market.id.concat(Bytes.fromI32(days));
     const thisDailyMarketSnapshot = MarketDailySnapshot.load(snapshotID);
     if (thisDailyMarketSnapshot) {
@@ -1272,10 +1273,25 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // catch divide by zero
   if (market.totalDepositBalanceUSD.equals(BIGDECIMAL_ZERO)) return;
 
+  // If snapshotCount is less than 30,
+  // divide the totalInterest by snapshotCount, 
+  // then multiply by 30 to get the first 30 days monthly interest rate.
+  if (snapshotCount > 0 && snapshotCount < DAYS_IN_MONTH) {
+    totalInterest = totalInterest.times(
+      BigDecimal.fromString((DAYS_IN_MONTH / snapshotCount).toString())
+    );
+  }
+
+  // Multiply the monthly interest rate by 12 to get the APR.
+  let annualTotalInterest = totalInterest.times(
+    new BigDecimal(BigInt.fromI32(MONTH_IN_YEAR))
+  );
+
   const supplyRate = safeDiv(
-    totalInterest,
+    annualTotalInterest,
     market.totalDepositBalanceUSD,
   ).times(exponentToBigDecimal(2)); // E.g. 5.21% should be stored as 5.21
+
   manager.getOrUpdateRate(
     InterestRateSide.LENDER,
     InterestRateType.VARIABLE,

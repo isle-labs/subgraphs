@@ -875,9 +875,47 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     event,
     getProtocolData(),
   );
-  updateMarketAndProtocol(manager, event);
+  const market = manager.getMarket();
 
   const loanManagerContract = LoanManager.bind(event.address);
+  const tryAccountedInterest = loanManagerContract.try_accountedInterest();
+  if (tryAccountedInterest.reverted) {
+    log.error(
+      "[updateMarketAndProtocol] LoanManager contract {} does not have a getAccountedInterest",
+      [market._loanManager!.toHexString()],
+    );
+    return;
+  }
+  const newAccountedInterest = tryAccountedInterest.value;
+  const tryLoanPaymentBreakdown = loanManagerContract.try_getLoanPaymentBreakdown(event.params.loanId_);
+  if (tryLoanPaymentBreakdown.reverted) {
+    log.error(
+      "[updateMarketAndProtocol] LoanManager contract {} does not have a LoanPaymentBreakdown",
+      [market._loanManager!.toHexString()],
+    );
+    return;
+  }
+  const interest = tryLoanPaymentBreakdown.value.getInterest_();
+  if (!market._prevRevenue) {
+    market._prevRevenue = BIGINT_ZERO;
+  }
+  const totalPrevRevenue = market._prevRevenue!.minus(newAccountedInterest);
+  const unaccountedRevenue = interest.minus(totalPrevRevenue);
+  const inputTokenPriceUSD = BIGDECIMAL_ONE; // notice that in Isle Finance v0, the price of all stablecoins are hardcoded to 1
+
+  manager.addSupplyRevenue(
+    getTotalValueUSD(
+      unaccountedRevenue,
+      manager.getInputToken().decimals,
+      inputTokenPriceUSD,
+    ),
+  );
+
+  market._prevRevenue = newAccountedInterest;
+  market.save();
+  updateMarketAndProtocol(manager, event);
+
+  
   const tryLoanInfo = loanManagerContract.try_getLoanInfo(event.params.loanId_);
   if (tryLoanInfo.reverted) {
     log.error(
@@ -887,7 +925,6 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     return;
   }
   const borrower = tryLoanInfo.value.buyer;
-  const inputTokenPriceUSD = BIGDECIMAL_ONE; // notice that in Isle Finance v0, the price of all stablecoins are hardcoded to 1
   const repayAmount = event.params.principal_.plus(event.params.interest_);
   const inputTokenDecimals = manager.getInputToken().decimals;
   manager.createRepay(
@@ -1257,7 +1294,7 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // update supply rate using interest from the last 30 days
   let totalInterest = BIGDECIMAL_ZERO;
   let days = event.block.timestamp.toI32() / SECONDS_PER_DAY;
-  let snapshotCount = Math.min(market.dailySnapshots.load().length, DAYS_IN_MONTH);
+  let snapshotCount: number = Math.min(market.dailySnapshots.load().length, DAYS_IN_MONTH);
 
   for (let i = 0; i < snapshotCount; i++) {
     const snapshotID = market.id.concat(Bytes.fromI32(days));
@@ -1278,7 +1315,7 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // then multiply by 30 to get the first 30 days monthly interest rate.
   if (snapshotCount > 0 && snapshotCount < DAYS_IN_MONTH) {
     totalInterest = totalInterest.times(
-      new BigDecimal(BigInt.fromI32(DAYS_IN_MONTH / snapshotCount))
+      BigDecimal.fromString((DAYS_IN_MONTH / snapshotCount).toString())
     );
   }
 

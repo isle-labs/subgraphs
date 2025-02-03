@@ -874,7 +874,7 @@ type Market @entity @regularPolling {
   borrowedToken: Token
 
   " Amount of input tokens borrowed in this market using variable interest rates (in native terms) "
-  variableBorrowedTokenBalance: BigInt
+  variableBorrowedTokenBalance: BigInt!
 
   " Amount of input tokens borrowed in this market using stable interest rates (in native terms) "
   stableBorrowedTokenBalance: BigInt
@@ -886,7 +886,7 @@ type Market @entity @regularPolling {
   supplyIndex: BigInt
 
   " Allowed limit to how much of the underlying asset can be supplied to this market. "
-  supplyCap: BigInt
+  supplyCap: BigInt!
 
   " Index used by the protocol to calculate the interest paid on the borrowed token (ie, variableBorrowIndex in Aave))"
   borrowIndex: BigInt
@@ -1061,7 +1061,7 @@ type Market @entity @regularPolling {
 
   _exitConfigs: [_ExitConfigs!]! @derivedFrom(field: "market")
 
-  _lockedLiquidityInWindow: BigInt
+  _lockedLiquidityInWindow: BigInt!
 
   _withdrawalRequests: [_WithdrawalRequest!]! @derivedFrom(field: "market")
 }
@@ -1133,7 +1133,7 @@ type MarketDailySnapshot @entity @dailySnapshot {
   reserveFactor: BigDecimal
 
   " Amount of input tokens borrowed in this market using variable interest rates (in native terms) "
-  variableBorrowedTokenBalance: BigInt
+  variableBorrowedTokenBalance: BigInt!
 
   " Amount of input tokens borrowed in this market using stable interest rates (in native terms) "
   stableBorrowedTokenBalance: BigInt
@@ -1359,7 +1359,7 @@ type MarketHourlySnapshot @entity @hourlySnapshot {
   reserves: BigDecimal
 
   " Amount of input tokens borrowed in this market using variable interest rates (in native terms) "
-  variableBorrowedTokenBalance: BigInt
+  variableBorrowedTokenBalance: BigInt!
 
   " Amount of input tokens borrowed in this market using stable interest rates (in native terms) "
   stableBorrowedTokenBalance: BigInt

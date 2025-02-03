@@ -12,6 +12,7 @@ import { ProtocolData } from "../../../src/sdk/manager";
 /////        Time        /////
 //////////////////////////////
 export const DAYS_IN_MONTH = 30;
+export const MONTH_IN_YEAR = 12;
 
 //////////////////////////////
 ///// Ethereum Addresses /////

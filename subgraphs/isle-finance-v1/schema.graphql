@@ -2128,6 +2128,9 @@ type _Loan @entity {
 
   " The timestamp of the loan creation "
   createdTimestamp: BigInt!
+
+  " Whether the loan has been withdrawn by supplier"
+  isWithdrawn: Boolean  
 }
 
 type _WithdrawalRequest @entity {

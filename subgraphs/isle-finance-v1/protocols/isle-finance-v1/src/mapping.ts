@@ -35,6 +35,7 @@ import {
   IssuanceParamsUpdated,
   DefaultTriggered,
   LoanManager,
+  FundsWithdrawn,
 } from "../../../generated/templates/LoanManager/LoanManager";
 import {
   Pool as PoolTemplate,
@@ -835,6 +836,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
   loan.financeTimestamp = tryLoanInfo.value.startDate;
   loan.maturityTimestamp = tryLoanInfo.value.dueDate;
+  loan.isWithdrawn = false;
 
   loan.save();
 
@@ -1074,6 +1076,15 @@ export function handleDefaultTriggered(event: DefaultTriggered): void {
   updateMarketAndProtocol(manager, event);
   loan.isActive = false;
   loan.isDefaulted = true;
+  loan.save();
+}
+
+// handle fund withdrawal
+export function handleFundsWithdrawn(event: FundsWithdrawn): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+  loan.isWithdrawn = true;
   loan.save();
 }
 

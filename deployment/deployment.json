@@ -3129,13 +3129,13 @@
       }
     }
   },
-  "isle-finance-v0": {
+  "isle-finance-v1": {
     "schema": "lending",
-    "base": "isle-finance-v0",
-    "protocol": "isle-finance-v0",
+    "base": "isle-finance-v1",
+    "protocol": "isle-finance-v1",
     "project": "isle",
     "deployments": {
-      "isle-finance-v0-sepolia": {
+      "isle-finance-v1-plume-testnet": {
         "network": "sepolia",
         "status": "dev",
         "versions": {
@@ -3144,7 +3144,95 @@
           "methodology": "1.0.0"
         },
         "files": {
-          "template": "isle.finance.v0.template.yaml"
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_plume_testnet",
+            "query-id": "isle_plume_testnet"
+          }
+        }
+      },
+      "isle-finance-v1-plume-devnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_plume_devnet",
+            "query-id": "isle_plume_devnet"
+          }
+        }
+      },
+      "isle-finance-v1-plume-mainnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_plume_mainnet",
+            "query-id": "isle_plume_mainnet"
+          }
+        }
+      },
+      "isle-finance-v1-monad-testnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_monad_testnet",
+            "query-id": "isle_monad_testnet"
+          }
+        }
+      },
+      "isle-finance-v1-sepolia": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
         },
         "options": {
           "prepare:yaml": true,
@@ -3157,8 +3245,8 @@
           }
         }
       },
-      "isle-finance-v0-plume-testnet": {
-        "network": "plume-testnet",
+      "isle-finance-v1-base-sepolia": {
+        "network": "base-sepolia",
         "status": "dev",
         "versions": {
           "schema": "3.1.0",
@@ -3166,7 +3254,7 @@
           "methodology": "1.0.0"
         },
         "files": {
-          "template": "isle.finance.v0.template.yaml"
+          "template": "isle.finance.v1.template.yaml"
         },
         "options": {
           "prepare:yaml": true,
@@ -3174,8 +3262,30 @@
         },
         "services": {
           "hosted-service": {
-            "slug": "isle_plume-testnet",
-            "query-id": "isle_plume-testnet"
+            "slug": "isle_base_sepolia",
+            "query-id": "isle_base_sepolia"
+          }
+        }
+      },
+      "isle-finance-v1-bsc-testnet": {
+        "network": "chapel",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_bsc_testnet",
+            "query-id": "isle_bsc_testnet"
           }
         }
       }

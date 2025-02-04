@@ -1,0 +1,10 @@
+{
+  "network": "base-sepolia",
+  "graftEnabled": false,
+  "subgraphId": "QmRAQHXVEa45NjhXYUdjzrnhapCbnHvLBFxzZ1m94uF6LE",
+  "graftStartBlock": 0,
+  "PoolAddressesProvider": {
+    "startBlock": 14824386,
+    "address": "0x51b235a5511e7c25A3F610081f096101CCA72F99"
+  }
+}

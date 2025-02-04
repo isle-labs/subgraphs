@@ -1,0 +1,1190 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "provider_",
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "ADDRESSES_PROVIDER",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPoolAddressesProvider"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "HUNDRED_PERCENT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "LOAN_MANAGER_REVISION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "PRECISION",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accountedInterest",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint112",
+        "internalType": "uint112"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "accruedInterest",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "accruedInterest_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "asset",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "assetsUnderManagement",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "assetsUnderManagement_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "domainEnd",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint48",
+        "internalType": "uint48"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "domainStart",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint48",
+        "internalType": "uint48"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "fundLoan",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "getLoanInfo",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "loan_",
+        "type": "tuple",
+        "internalType": "struct Loan.Info",
+        "components": [
+          {
+            "name": "buyer",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "seller",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "receivableAsset",
+            "type": "address",
+            "internalType": "address"
+          },
+          {
+            "name": "receivableTokenId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "principal",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "drawableFunds",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "interestRate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "lateInterestPremiumRate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "startDate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "dueDate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "originalDueDate",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "gracePeriod",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "isImpaired",
+            "type": "bool",
+            "internalType": "bool"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLoanPaymentBreakdown",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "interest_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getLoanPaymentDetailedBreakdown",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "interest_",
+        "type": "uint256[2]",
+        "internalType": "uint256[2]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRevision",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "revision_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "impairLoan",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "impairmentFor",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "impairedDate",
+        "type": "uint40",
+        "internalType": "uint40"
+      },
+      {
+        "name": "impariedByGovernor",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "initialize",
+    "inputs": [
+      {
+        "name": "asset_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "issuanceRate",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "liquidationInfoFor",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "triggeredByGovernor",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "principal",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "interest",
+        "type": "uint120",
+        "internalType": "uint120"
+      },
+      {
+        "name": "lateInterest",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFees",
+        "type": "uint96",
+        "internalType": "uint96"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "loanCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "onERC721Received",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "paymentCounter",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "paymentIdOf",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "paymentWithEarliestDueDate",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint24",
+        "internalType": "uint24"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "payments",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "protocolFee",
+        "type": "uint24",
+        "internalType": "uint24"
+      },
+      {
+        "name": "adminFee",
+        "type": "uint24",
+        "internalType": "uint24"
+      },
+      {
+        "name": "startDate",
+        "type": "uint48",
+        "internalType": "uint48"
+      },
+      {
+        "name": "dueDate",
+        "type": "uint48",
+        "internalType": "uint48"
+      },
+      {
+        "name": "incomingNetInterest",
+        "type": "uint128",
+        "internalType": "uint128"
+      },
+      {
+        "name": "issuanceRate",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "principalOut",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "removeLoanImpairment",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "repayLoan",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "interest_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "requestLoan",
+    "inputs": [
+      {
+        "name": "receivableAsset_",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "receivablesTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "gracePeriod_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "principalRequested_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "rates_",
+        "type": "uint256[2]",
+        "internalType": "uint256[2]"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "sortedPayments",
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "previous",
+        "type": "uint24",
+        "internalType": "uint24"
+      },
+      {
+        "name": "next",
+        "type": "uint24",
+        "internalType": "uint24"
+      },
+      {
+        "name": "paymentDueDate",
+        "type": "uint48",
+        "internalType": "uint48"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "triggerDefault",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "remainingLosses_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFees_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "unrealizedLosses",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint128",
+        "internalType": "uint128"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "updateAccounting",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "withdrawFunds",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "destination_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "DefaultTriggered",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FeesPaid",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "adminFee_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFee_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FundsDistributed",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "netInterest_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "FundsWithdrawn",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "amount_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ImpairmentRemoved",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "originalPaymentDueDate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "Initialized",
+    "inputs": [
+      {
+        "name": "poolAddressesProvider_",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "asset_",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "IssuanceParamsUpdated",
+    "inputs": [
+      {
+        "name": "domainEnd_",
+        "type": "uint48",
+        "indexed": true,
+        "internalType": "uint48"
+      },
+      {
+        "name": "issuanceRate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accountedInterest_",
+        "type": "uint112",
+        "indexed": false,
+        "internalType": "uint112"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LoanImpaired",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "newDueDate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LoanRepaid",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "principal_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "interest_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "LoanRequested",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PaymentAdded",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "paymentId_",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "protocolFee_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "adminFee_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "startDate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "dueDate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newRate_",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PaymentRemoved",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "indexed": true,
+        "internalType": "uint16"
+      },
+      {
+        "name": "paymentId_",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PrincipalOutUpdated",
+    "inputs": [
+      {
+        "name": "principalOut_",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UnrealizedLossesUpdated",
+    "inputs": [
+      {
+        "name": "unrealizedLosses_",
+        "type": "uint128",
+        "indexed": false,
+        "internalType": "uint128"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AddressesProviderZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FunctionPaused",
+    "inputs": [
+      {
+        "name": "sig",
+        "type": "bytes4",
+        "internalType": "bytes4"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_AssetZeroAddress",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_CallerNotReceivableBuyer",
+    "inputs": [
+      {
+        "name": "expectedBuyer_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_InvalidReceivable",
+    "inputs": [
+      {
+        "name": "receivablesTokenId_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_LoanImpaired",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_LoanNotFunded",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_LoanNotImpaired",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_NotLoan",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_NotPastDueDatePlusGracePeriod",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_PastDueDate",
+    "inputs": [
+      {
+        "name": "loanId_",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "dueDate_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "currentTimestamp_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_PrincipalRequestedTooHigh",
+    "inputs": [
+      {
+        "name": "principalRequested_",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "maxPrincipal_",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "LoanManager_ReceivableAssetNotAllowed",
+    "inputs": [
+      {
+        "name": "receivableAsset_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NotPoolAdmin",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NotPoolAdminOrGovernor",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "NotPoolConfigurator",
+    "inputs": [
+      {
+        "name": "caller_",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  }
+]

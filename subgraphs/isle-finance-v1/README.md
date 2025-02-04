@@ -5,7 +5,7 @@
 1. Build Subgraph
 
 ```sh
-messari build isle-finance-v0
+messari build isle-finance-v1-<network>
 ```
 
 ## References

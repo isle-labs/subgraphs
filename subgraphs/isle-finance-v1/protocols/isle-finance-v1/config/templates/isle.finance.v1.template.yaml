@@ -34,7 +34,7 @@ dataSources:
       eventHandlers:
         - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
           handler: handleProxyCreated
-      file: ./protocols/isle-finance-v0/src/mapping.ts
+      file: ./protocols/isle-finance-v1/src/mapping.ts
 templates:
   - kind: ethereum/contract
     name: LoanManager
@@ -77,7 +77,7 @@ templates:
           handler: handleIssuanceParamsUpdated
         - event: DefaultTriggered(indexed uint16)
           handler: handleDefaultTriggered
-      file: ./protocols/isle-finance-v0/src/mapping.ts
+      file: ./protocols/isle-finance-v1/src/mapping.ts
   - kind: ethereum/contract
     name: PoolConfigurator
     network: {{ network }}
@@ -120,7 +120,7 @@ templates:
           handler: handleCoverWithdrawn
         - event: CoverLiquidated(uint256)
           handler: handleCoverLiquidated
-      file: ./protocols/isle-finance-v0/src/mapping.ts
+      file: ./protocols/isle-finance-v1/src/mapping.ts
   - kind: ethereum/contract
     name: Pool
     network: {{ network }}
@@ -151,7 +151,7 @@ templates:
         handler: handleDeposit
       - event: Withdraw(indexed address,indexed address,indexed address,uint256,uint256)
         handler: handleWithdraw
-      file: ./protocols/isle-finance-v0/src/mapping.ts
+      file: ./protocols/isle-finance-v1/src/mapping.ts
   - kind: ethereum/contract	
     name: WithdrawalManager
     network: {{ network }}
@@ -178,4 +178,4 @@ templates:
           handler: handleWithdrawalProcessed
         - event: WithdrawalCancelled(indexed address)
           handler: handleWithdrawalCancelled 
-      file: ./protocols/isle-finance-v0/src/mapping.ts
+      file: ./protocols/isle-finance-v1/src/mapping.ts

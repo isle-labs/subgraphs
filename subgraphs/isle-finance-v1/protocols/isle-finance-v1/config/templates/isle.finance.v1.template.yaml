@@ -77,6 +77,8 @@ templates:
           handler: handleIssuanceParamsUpdated
         - event: DefaultTriggered(indexed uint16)
           handler: handleDefaultTriggered
+        - event: FundsWithdrawn(indexed uint16,uint256)
+          handler: handleFundsWithdrawn
       file: ./protocols/isle-finance-v1/src/mapping.ts
   - kind: ethereum/contract
     name: PoolConfigurator

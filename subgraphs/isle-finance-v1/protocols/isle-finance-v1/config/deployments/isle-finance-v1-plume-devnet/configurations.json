@@ -1,0 +1,7 @@
+{
+  "network": "plume-testnet",
+  "PoolAddressesProvider": {
+    "startBlock": 493,
+    "address": "0x51b235a5511e7c25A3F610081f096101CCA72F99"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "network": "plume-testnet",
+  "graftEnabled": false,
+  "subgraphId": "QmRAQHXVEa45NjhXYUdjzrnhapCbnHvLBFxzZ1m94uF6LE",
+  "graftStartBlock": 0,
+  "PoolAddressesProvider": {
+    "startBlock": 10489326,
+    "address": "0x2693220e16c91c0CEA21a0D52f5A036F27E08560"
+  }
+}

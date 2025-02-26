@@ -2126,8 +2126,11 @@ type _Loan @entity {
   " The timestamp of the loan maturity "
   maturityTimestamp: BigInt
 
+  " The timestamp of the loan requested "
+  requestedTimestamp: BigInt!
+
   " The timestamp of the loan creation "
-  createdTimestamp: BigInt!
+  createdTimestamp: BigInt
 
   " Whether the loan has been withdrawn by supplier"
   isWithdrawn: Boolean  

@@ -29,6 +29,7 @@ import {
 } from "../../../generated/templates/PoolConfigurator/PoolConfigurator";
 import {
   Initialized as LoanManagerInitialized,
+  LoanRequested,
   PaymentAdded,
   LoanRepaid,
   FeesPaid,
@@ -739,11 +740,92 @@ export function handleLoanManagerInitialized(
   market.save();
 }
 
+export function handleLoanRequested(event: LoanRequested): void {
+  const loanIdBytes = Bytes.fromI32(event.params.loanId_);
+  const loanId = event.address.concat(loanIdBytes);
+  const loan = getOrCreateLoan(loanId, event);
+
+  const loanManagerContract = LoanManager.bind(event.address);
+
+  // get the market, i.e. the pool
+  const tryAddressesProvider = loanManagerContract.try_ADDRESSES_PROVIDER();
+  if (tryAddressesProvider.reverted) {
+    log.error(
+      "[handlePaymentAdded] LoanManager contract {} does not have an addressesProvider",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+  const PoolAddressesProviderContract = PoolAddressesProvider.bind(
+    tryAddressesProvider.value,
+  );
+
+  const tryGetPoolConfigurator =
+    PoolAddressesProviderContract.try_getPoolConfigurator();
+  if (tryGetPoolConfigurator.reverted) {
+    log.error(
+      "[handlePaymentAdded] PoolAddressesProvider contract {} does not have a poolConfigurator",
+      [tryAddressesProvider.value.toHexString()],
+    );
+    return;
+  }
+
+  const PoolConfiguratorContract = PoolConfigurator.bind(
+    tryGetPoolConfigurator.value,
+  );
+  const tryPool = PoolConfiguratorContract.try_pool();
+  if (tryPool.reverted) {
+    log.error(
+      "[handlePaymentAdded] PoolConfigurator contract {} does not have a pool",
+      [tryGetPoolConfigurator.value.toHexString()],
+    );
+    return;
+  }
+
+  const tryBorrower = PoolConfiguratorContract.try_buyer();
+  if (tryBorrower.reverted) {
+    log.error(
+      "[handlePaymentAdded] PoolConfigurator contract {} does not have a buyer",
+      [tryGetPoolConfigurator.value.toHexString()],
+    );
+    return;
+  }
+
+  const tryLoanInfo = loanManagerContract.try_getLoanInfo(event.params.loanId_);
+  if (tryLoanInfo.reverted) {
+    log.error(
+      "[handlePaymentAdded] LoanManager contract {} does not have a loa info",
+      [event.address.toHexString()],
+    );
+    return;
+  }
+
+  loan.market = Bytes.fromHexString(tryPool.value.toHexString());
+  loan.loanManager = Bytes.fromHexString(event.address.toHexString());
+  loan.borrower = tryBorrower.value;
+  loan.gracePeriod = tryLoanInfo.value.gracePeriod;
+  loan.isActive = true;
+  loan.isDefaulted = false;
+  loan.receivableTokenId = tryLoanInfo.value.receivableTokenId;
+  loan.principal = tryLoanInfo.value.principal;
+  loan.interestRate = tryLoanInfo.value.interestRate;
+  loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
+  loan.financeTimestamp = tryLoanInfo.value.startDate;
+  loan.maturityTimestamp = tryLoanInfo.value.dueDate;
+  loan.isWithdrawn = false;
+  loan.requestLoanTxHash = event.transaction.hash;
+  loan.save();
+}
+
 // handles borrow creations for loans
 export function handlePaymentAdded(event: PaymentAdded): void {
   const loanIdBytes = Bytes.fromI32(event.params.loanId_);
   const loanId = event.address.concat(loanIdBytes);
   const loan = getOrCreateLoan(loanId, event);
+
+  loan.createdTimestamp = event.block.timestamp;
+  loan.fundLoanTxHash = event.transaction.hash;
+  loan.save();
 
   const loanManagerContract = LoanManager.bind(event.address);
 
@@ -822,23 +904,6 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   }
 
   const principal = tryLoanInfo.value.principal;
-  const receivableTokenId = tryLoanInfo.value.receivableTokenId;
-
-  loan.market = Bytes.fromHexString(tryPool.value.toHexString());
-  loan.loanManager = Bytes.fromHexString(event.address.toHexString());
-  loan.borrower = tryBorrower.value;
-  loan.gracePeriod = tryLoanInfo.value.gracePeriod;
-  loan.isActive = true;
-  loan.isDefaulted = false;
-  loan.receivableTokenId = receivableTokenId;
-  loan.principal = principal;
-  loan.interestRate = tryLoanInfo.value.interestRate;
-  loan.lateInterestPremiumRate = tryLoanInfo.value.lateInterestPremiumRate;
-  loan.financeTimestamp = tryLoanInfo.value.startDate;
-  loan.maturityTimestamp = tryLoanInfo.value.dueDate;
-  loan.isWithdrawn = false;
-
-  loan.save();
 
   manager.createBorrow(
     tryInputToken.value,
@@ -938,6 +1003,8 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     inputTokenPriceUSD,
     InterestRateType.FIXED,
   );
+
+  loan.isRepaid = true;
   loan.isActive = false;
   loan.isDefaulted = false;
   loan.save();
@@ -1084,6 +1151,7 @@ export function handleFundsWithdrawn(event: FundsWithdrawn): void {
   const loanIdBytes = Bytes.fromI32(event.params.loanId_);
   const loanId = event.address.concat(loanIdBytes);
   const loan = getOrCreateLoan(loanId, event);
+  loan.withdrawFundsTxHash = event.transaction.hash;
   loan.isWithdrawn = true;
   loan.save();
 }
@@ -1389,7 +1457,8 @@ function getOrCreateLoan(loanId: Bytes, event: ethereum.Event): _Loan {
   let loan = _Loan.load(loanId);
   if (!loan) {
     loan = new _Loan(loanId);
-    loan.createdTimestamp = event.block.timestamp;
+    loan.requestedTimestamp = event.block.timestamp;
+    loan.isRepaid = false;
     loan.save();
   }
   return loan;

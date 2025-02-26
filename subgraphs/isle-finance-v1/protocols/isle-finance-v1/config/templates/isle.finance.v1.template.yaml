@@ -66,6 +66,8 @@ templates:
       eventHandlers:
         - event: Initialized(address,address)
           handler: handleLoanManagerInitialized
+        - event: LoanRequested(indexed uint16)
+          handler: handleLoanRequested
         - event: PaymentAdded(indexed uint16,indexed
             uint256,uint256,uint256,uint256,uint256,uint256)
           handler: handlePaymentAdded

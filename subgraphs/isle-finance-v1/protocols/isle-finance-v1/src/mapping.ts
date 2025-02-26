@@ -813,6 +813,7 @@ export function handleLoanRequested(event: LoanRequested): void {
   loan.financeTimestamp = tryLoanInfo.value.startDate;
   loan.maturityTimestamp = tryLoanInfo.value.dueDate;
   loan.isWithdrawn = false;
+  loan.requestLoanTxHash = event.transaction.hash;
   loan.save();
 }
 
@@ -823,6 +824,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   const loan = getOrCreateLoan(loanId, event);
 
   loan.createdTimestamp = event.block.timestamp;
+  loan.fundLoanTxHash = event.transaction.hash;
   loan.save();
 
   const loanManagerContract = LoanManager.bind(event.address);
@@ -1001,6 +1003,8 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     inputTokenPriceUSD,
     InterestRateType.FIXED,
   );
+
+  loan.isRepaid = true;
   loan.isActive = false;
   loan.isDefaulted = false;
   loan.save();
@@ -1147,6 +1151,7 @@ export function handleFundsWithdrawn(event: FundsWithdrawn): void {
   const loanIdBytes = Bytes.fromI32(event.params.loanId_);
   const loanId = event.address.concat(loanIdBytes);
   const loan = getOrCreateLoan(loanId, event);
+  loan.withdrawFundsTxHash = event.transaction.hash;
   loan.isWithdrawn = true;
   loan.save();
 }
@@ -1453,6 +1458,7 @@ function getOrCreateLoan(loanId: Bytes, event: ethereum.Event): _Loan {
   if (!loan) {
     loan = new _Loan(loanId);
     loan.requestedTimestamp = event.block.timestamp;
+    loan.isRepaid = false;
     loan.save();
   }
   return loan;

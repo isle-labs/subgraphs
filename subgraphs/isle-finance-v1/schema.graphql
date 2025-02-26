@@ -2108,6 +2108,9 @@ type _Loan @entity {
   " The repayment status of the loan "
   isDefaulted: Boolean
 
+  " The repayment status of the loan "
+  isRepaid: Boolean
+
   " The token ID of the receivable token"
   receivableTokenId: BigInt
 
@@ -2134,6 +2137,15 @@ type _Loan @entity {
 
   " Whether the loan has been withdrawn by supplier"
   isWithdrawn: Boolean  
+
+  " The transaction hash of the loan request "
+  requestLoanTxHash: Bytes
+
+  " The transaction hash of the loan funding "
+  fundLoanTxHash: Bytes
+  
+  " The transaction hash of the funds withdrawal "
+  withdrawFundsTxHash: Bytes
 }
 
 type _WithdrawalRequest @entity {

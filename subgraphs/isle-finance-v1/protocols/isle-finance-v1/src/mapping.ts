@@ -823,6 +823,7 @@ export function handlePaymentAdded(event: PaymentAdded): void {
   const loanId = event.address.concat(loanIdBytes);
   const loan = getOrCreateLoan(loanId, event);
 
+  loan.financeTimestamp = event.params.startDate_;
   loan.createdTimestamp = event.block.timestamp;
   loan.fundLoanTxHash = event.transaction.hash;
   loan.save();

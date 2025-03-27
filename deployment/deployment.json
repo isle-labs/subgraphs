@@ -3135,6 +3135,28 @@
     "protocol": "isle-finance-v1",
     "project": "isle",
     "deployments": {
+      "isle-finance-v1-plume-mainnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_plume_mainnet",
+            "query-id": "isle_plume_mainnet"
+          }
+        }
+      },
       "isle-finance-v1-plume-testnet": {
         "network": "sepolia",
         "status": "dev",
@@ -3166,7 +3188,7 @@
           "methodology": "1.0.0"
         },
         "files": {
-          "template": "isle.finance.v1.template.yaml"
+          "template": "isle.finance.v1.template.2p.yaml"
         },
         "options": {
           "prepare:yaml": true,
@@ -3179,7 +3201,7 @@
           }
         }
       },
-      "isle-finance-v1-plume-mainnet": {
+      "isle-finance-v1-plume-mainnet-legacy": {
         "network": "sepolia",
         "status": "dev",
         "versions": {
@@ -3196,8 +3218,30 @@
         },
         "services": {
           "hosted-service": {
-            "slug": "isle_plume_mainnet",
-            "query-id": "isle_plume_mainnet"
+            "slug": "isle_plume_mainnet-legacy",
+            "query-id": "isle_plume_mainnet-legacy"
+          }
+        }
+      },
+      "isle-finance-v1-plume-testnet-legacy": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_plume_testnet-legacy",
+            "query-id": "isle_plume_testnet-legacy"
           }
         }
       },

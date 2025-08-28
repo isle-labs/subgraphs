@@ -1,0 +1,7 @@
+{
+  "network": "hedera-mainnet",
+  "PoolAddressesProvider": {
+    "startBlock": 80841713,
+    "address": "0x01df906f8adae8eade615c8166d3fff0d647890a"
+  }
+}

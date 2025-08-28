@@ -14,9 +14,34 @@ dataSources:
     name: PoolAddressesProvider 
     network: {{ network }}
     source:
-      address: "{{ PoolAddressesProvider.address }}"
+      address: "{{ SandboxPoolAddressesProvider.address }}"
       abi: PoolAddressesProvider
-      startBlock: {{ PoolAddressesProvider.startBlock }}
+      startBlock: {{ SandboxPoolAddressesProvider.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities: []
+      abis:
+        - name: PoolAddressesProvider
+          file: ./abis/PoolAddressesProvider.json
+        - name: LoanManager
+          file: ./abis/LoanManager.json
+        - name: WithdrawalManager
+          file: ./abis/WithdrawalManager.json
+        - name: PoolConfigurator
+          file: ./abis/PoolConfigurator.json
+      eventHandlers:
+        - event: ProxyCreated(indexed bytes32,indexed address,indexed address)
+          handler: handleProxyCreated
+      file: ./protocols/isle-finance-v1/src/mapping.ts
+  - kind: ethereum/contract
+    name: WurenTekPoolAddressesProvider 
+    network: {{ network }}
+    source:
+      address: "{{ WurenTekPoolAddressesProvider.address }}"
+      abi: PoolAddressesProvider
+      startBlock: {{ WurenTekPoolAddressesProvider.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

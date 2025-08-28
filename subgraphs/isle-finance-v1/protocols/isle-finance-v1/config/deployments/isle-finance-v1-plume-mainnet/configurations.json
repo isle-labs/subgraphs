@@ -1,7 +1,7 @@
 {
-  "network": "plume",
+  "network": "plume-mainnet",
   "PoolAddressesProvider": {
-    "startBlock": 119201,
-    "address": "0x9A2555840098aD13f497B9cCda6e16F606c3C94f"
+    "startBlock": 21240,
+    "address": "0x51b235a5511e7c25A3F610081f096101CCA72F99"
   }
 }

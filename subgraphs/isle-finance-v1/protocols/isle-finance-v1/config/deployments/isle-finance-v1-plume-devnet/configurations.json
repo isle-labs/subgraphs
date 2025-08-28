@@ -1,7 +1,11 @@
 {
   "network": "plume-testnet",
-  "PoolAddressesProvider": {
+  "ChargeSmithPoolAddressesProvider": {
     "startBlock": 493,
     "address": "0x51b235a5511e7c25A3F610081f096101CCA72F99"
+  },
+  "WurenTekPoolAddressesProvider": {
+    "startBlock": 12648983,
+    "address": "0x18483233120d834CC3335182071dF7b5e1E3dfFA"
   }
 }

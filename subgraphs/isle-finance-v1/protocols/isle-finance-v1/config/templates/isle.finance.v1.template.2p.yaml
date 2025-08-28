@@ -14,9 +14,9 @@ dataSources:
     name: PoolAddressesProvider 
     network: {{ network }}
     source:
-      address: "{{ ChargeSmithPoolAddressesProvider.address }}"
+      address: "{{ SandboxPoolAddressesProvider.address }}"
       abi: PoolAddressesProvider
-      startBlock: {{ ChargeSmithPoolAddressesProvider.startBlock }}
+      startBlock: {{ SandboxPoolAddressesProvider.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

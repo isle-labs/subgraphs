@@ -1,0 +1,7 @@
+{
+  "network": "hedera-testnet",
+  "PoolAddressesProvider": {
+    "startBlock": 19538989,
+    "address": "0x3c26223D942b8dEDacfa0853757651745F0d45A3"
+  }
+}

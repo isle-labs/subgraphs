@@ -3166,7 +3166,7 @@
           "methodology": "1.0.0"
         },
         "files": {
-          "template": "isle.finance.v1.template.yaml"
+          "template": "isle.finance.v1.template.2p.yaml"
         },
         "options": {
           "prepare:yaml": true,
@@ -3330,6 +3330,50 @@
           "hosted-service": {
             "slug": "isle_bsc_testnet",
             "query-id": "isle_bsc_testnet"
+          }
+        }
+      },
+      "isle-finance-v1-hedera-testnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_hedera_testnet",
+            "query-id": "isle_hedera_testnet"
+          }
+        }
+      },
+      "isle-finance-v1-hedera-mainnet": {
+        "network": "sepolia",
+        "status": "dev",
+        "versions": {
+          "schema": "3.1.0",
+          "subgraph": "1.0.0",
+          "methodology": "1.0.0"
+        },
+        "files": {
+          "template": "isle.finance.v1.template.yaml"
+        },
+        "options": {
+          "prepare:yaml": true,
+          "prepare:constants": false
+        },
+        "services": {
+          "hosted-service": {
+            "slug": "isle_hedera_mainnet",
+            "query-id": "isle_hedera_mainnet"
           }
         }
       }

@@ -1,7 +1,11 @@
 {
   "network": "plume-sepolia",
-  "PoolAddressesProvider": {
+  "WurenTekPoolAddressesProvider": {
     "startBlock": 1531,
     "address": "0x51b235a5511e7c25A3F610081f096101CCA72F99"
+  },
+  "SandboxPoolAddressesProvider": {
+    "startBlock": 13816397,
+    "address": "0x2A2C043B1eD4bA5f456A7c4F8578013d4c51d297"
   }
 }

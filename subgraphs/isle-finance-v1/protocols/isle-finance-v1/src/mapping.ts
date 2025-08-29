@@ -53,6 +53,7 @@ import {
   BIGDECIMAL_ONE,
   BIGDECIMAL_ZERO,
   BIGINT_ZERO,
+  BIGINT_PRECISION,
   exponentToBigDecimal,
   InterestRateSide,
   InterestRateType,
@@ -63,7 +64,12 @@ import {
 } from "../../../src/sdk/constants";
 import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
-import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH, MONTH_IN_YEAR } from "./constants";
+import {
+  getProtocolData,
+  INTEREST_DECIMALS,
+  DAYS_IN_MONTH,
+  MONTH_IN_YEAR,
+} from "./constants";
 import {
   MarketDailySnapshot,
   _Loan,
@@ -955,7 +961,8 @@ export function handleLoanRepaid(event: LoanRepaid): void {
     return;
   }
   const newAccountedInterest = tryAccountedInterest.value;
-  const tryLoanPaymentBreakdown = loanManagerContract.try_getLoanPaymentBreakdown(event.params.loanId_);
+  const tryLoanPaymentBreakdown =
+    loanManagerContract.try_getLoanPaymentBreakdown(event.params.loanId_);
   if (tryLoanPaymentBreakdown.reverted) {
     log.error(
       "[updateMarketAndProtocol] LoanManager contract {} does not have a LoanPaymentBreakdown",
@@ -983,7 +990,6 @@ export function handleLoanRepaid(event: LoanRepaid): void {
   market.save();
   updateMarketAndProtocol(manager, event);
 
-  
   const tryLoanInfo = loanManagerContract.try_getLoanInfo(event.params.loanId_);
   if (tryLoanInfo.reverted) {
     log.error(
@@ -1183,13 +1189,38 @@ function updateMarketAndProtocol(
     Address.fromBytes(market._poolConfigurator!),
   );
 
-  const tryTotalAssets = poolConfiguratorContract.try_totalAssets(); // input tokens
-  if (tryTotalAssets.reverted) {
+  const blockTimeStamp = event.block.timestamp;
+  const tryDomainStart = loanManagerContract.try_domainStart();
+  if (tryDomainStart.reverted) {
     log.error(
-      "[updateMarketAndProtocol] PoolConfigurator contract {} does not have a totalAssets",
-      [market._poolConfigurator!.toHexString()],
+      "[updateMarketAndProtocol] LoanManagerContract contract does not have a domainStart",
+      [],
     );
     return;
+  }
+  const domainStart = tryDomainStart.value;
+
+  let totalAssets = BIGINT_ZERO;
+  let assetsUnderManagement = BIGINT_ZERO;
+  if (blockTimeStamp > domainStart) {
+    const tryTotalAssets = poolConfiguratorContract.try_totalAssets(); // input tokens
+    if (tryTotalAssets.reverted) {
+      log.error(
+        "[updateMarketAndProtocol] PoolConfigurator contract {} does not have a totalAssets",
+        [market._poolConfigurator!.toHexString()],
+      );
+      return;
+    }
+    totalAssets = tryTotalAssets.value;
+  } else {
+    const poolBalance = getBalanceOf(
+      poolContract.try_asset().value,
+      Address.fromBytes(market.id),
+    );
+    const principalOut = loanManagerContract.try_principalOut().value;
+    const accountedInterest = loanManagerContract.try_accountedInterest().value;
+    assetsUnderManagement = principalOut.plus(accountedInterest);
+    totalAssets = poolBalance.plus(assetsUnderManagement);
   }
 
   const tryTotalSupply = poolContract.try_totalSupply(); // output tokens
@@ -1202,18 +1233,22 @@ function updateMarketAndProtocol(
   }
 
   const inputTokenPriceUSD = BIGDECIMAL_ONE;
-  const tryAUM = loanManagerContract.try_assetsUnderManagement();
-  if (tryAUM.reverted) {
-    log.error(
-      "[updateMarketAndProtocol] LoanManager contract {} does not have a assetsUnderManagement",
-      [market._loanManager!.toHexString()],
-    );
-    return;
+
+  if (blockTimeStamp > domainStart) {
+    const tryAUM = loanManagerContract.try_assetsUnderManagement();
+    if (tryAUM.reverted) {
+      log.error(
+        "[updateMarketAndProtocol] LoanManager contract {} does not have a assetsUnderManagement",
+        [market._loanManager!.toHexString()],
+      );
+      return;
+    }
+    assetsUnderManagement = tryAUM.value;
   }
 
   // TODO: consider the decimal offset
   const exchangeRate = safeDiv(
-    tryTotalAssets.value.toBigDecimal().plus(BIGDECIMAL_ONE),
+    totalAssets.toBigDecimal().plus(BIGDECIMAL_ONE),
     tryTotalSupply.value.toBigDecimal().plus(BIGDECIMAL_ONE),
   );
 
@@ -1224,8 +1259,8 @@ function updateMarketAndProtocol(
 
   manager.updateMarketAndProtocolData(
     inputTokenPriceUSD,
-    tryTotalAssets.value,
-    tryAUM.value,
+    totalAssets,
+    assetsUnderManagement,
     null,
     null,
     exchangeRate,
@@ -1295,17 +1330,83 @@ function updateMarketAndProtocol(
     exitConfig.save();
   }
 
-  const tryLockedLiquidity = withdrawalManagerContract.try_lockedLiquidity();
-  if (tryLockedLiquidity.reverted) {
+  const currentCycleId = tryGetCurrentCycleId.value;
+
+  // Get window information with error handling
+  const tryGetWindow =
+    withdrawalManagerContract.try_getWindowAtId(currentCycleId);
+  if (tryGetWindow.reverted) {
     log.error(
-      "[updateMarketAndProtocol] WithdrawalManager contract {} does not have a lockedLiquidity",
-      [market._withdrawalManager!.toHexString()],
+      "[updateMarketAndProtocol] Failed to get window at cycle ID {} from WithdrawalManager contract {}. Block: {}, Timestamp: {}. Setting defaults.",
+      [
+        currentCycleId.toString(),
+        market._withdrawalManager!.toHexString(),
+        event.block.number.toString(),
+        event.block.timestamp.toString(),
+      ],
     );
     return;
   }
 
-  market._currentWithdrawalCycleId = tryGetCurrentCycleId.value.toI32();
-  market._lockedLiquidityInWindow = tryLockedLiquidity.value;
+  const window = tryGetWindow.value;
+  const windowStart = window.getWindowStart_();
+  const windowEnd_ = window.getWindowEnd_();
+  let lockedLiquidity = BIGINT_ZERO;
+
+  if (blockTimeStamp >= windowStart && blockTimeStamp < windowEnd_) {
+    // Get unrealized losses with error handling
+    const tryUnrealizedLosses = loanManagerContract.try_unrealizedLosses();
+    if (tryUnrealizedLosses.reverted) {
+      log.error(
+        "[updateMarketAndProtocol] Failed to get unrealized losses from LoanManager contract {}. Using zero losses. Block: {}, Timestamp: {}",
+        [
+          market._loanManager!.toHexString(),
+          event.block.number.toString(),
+          event.block.timestamp.toString(),
+        ],
+      );
+      return;
+    }
+
+    // Normal calculation path - all contract calls succeeded
+    const unrealizedLossesValue = tryUnrealizedLosses.value;
+    const unrealizedLosses = unrealizedLossesValue.lt(totalAssets)
+      ? unrealizedLossesValue
+      : totalAssets;
+    const totalAssetsWithLosses = totalAssets.minus(unrealizedLosses);
+    const totalSupply = tryTotalSupply.value;
+
+    // Get total cycle shares with error handling
+    const tryTotalCycleShares =
+      withdrawalManagerContract.try_totalCycleShares(currentCycleId);
+    if (tryTotalCycleShares.reverted) {
+      log.error(
+        "[updateMarketAndProtocol] Failed to get total cycle shares for cycle ID {} from WithdrawalManager contract {}. Block: {}, Timestamp: {}. Using zero locked liquidity.",
+        [
+          currentCycleId.toString(),
+          market._withdrawalManager!.toHexString(),
+          event.block.number.toString(),
+          event.block.timestamp.toString(),
+        ],
+      );
+      return;
+    }
+    const totalCycleShares = tryTotalCycleShares.value;
+    if (totalSupply.gt(BIGINT_ZERO)) {
+      lockedLiquidity = totalCycleShares
+        .times(totalAssetsWithLosses)
+        .div(totalSupply);
+    } else {
+      log.warning(
+        "[updateMarketAndProtocol] Total supply is zero, setting locked liquidity to zero. Block: {}",
+        [event.block.number.toString()],
+      );
+      lockedLiquidity = BIGINT_ZERO;
+    }
+  }
+
+  market._currentWithdrawalCycleId = currentCycleId.toI32();
+  market._lockedLiquidityInWindow = lockedLiquidity;
   market.save();
 
   updateBorrowRate(manager);
@@ -1374,7 +1475,10 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   // update supply rate using interest from the last 30 days
   let totalInterest = BIGDECIMAL_ZERO;
   let days = event.block.timestamp.toI32() / SECONDS_PER_DAY;
-  let snapshotCount: number = Math.min(market.dailySnapshots.load().length, DAYS_IN_MONTH);
+  let snapshotCount: number = Math.min(
+    market.dailySnapshots.load().length,
+    DAYS_IN_MONTH,
+  );
 
   for (let i = 0; i < snapshotCount; i++) {
     const snapshotID = market.id.concat(Bytes.fromI32(days));
@@ -1391,17 +1495,17 @@ function updateSupplyRate(manager: DataManager, event: ethereum.Event): void {
   if (market.totalDepositBalanceUSD.equals(BIGDECIMAL_ZERO)) return;
 
   // If snapshotCount is less than 30,
-  // divide the totalInterest by snapshotCount, 
+  // divide the totalInterest by snapshotCount,
   // then multiply by 30 to get the first 30 days monthly interest rate.
   if (snapshotCount > 0 && snapshotCount < DAYS_IN_MONTH) {
     totalInterest = totalInterest.times(
-      BigDecimal.fromString((DAYS_IN_MONTH / snapshotCount).toString())
+      BigDecimal.fromString((DAYS_IN_MONTH / snapshotCount).toString()),
     );
   }
 
   // Multiply the monthly interest rate by 12 to get the APR.
   let annualTotalInterest = totalInterest.times(
-    new BigDecimal(BigInt.fromI32(MONTH_IN_YEAR))
+    new BigDecimal(BigInt.fromI32(MONTH_IN_YEAR)),
   );
 
   const supplyRate = safeDiv(

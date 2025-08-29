@@ -914,7 +914,8 @@ export class DataManager {
     if (exchangeRate) {
       this.market.exchangeRate = exchangeRate;
     }
-    const vBorrowAmount = this.market.variableBorrowedTokenBalance.toBigDecimal()
+    const vBorrowAmount = this.market.variableBorrowedTokenBalance
+      .toBigDecimal()
       .div(mantissaFactorBD);
     const sBorrowAmount = this.market.stableBorrowedTokenBalance
       ? this.market

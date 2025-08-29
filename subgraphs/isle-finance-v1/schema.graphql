@@ -2136,14 +2136,14 @@ type _Loan @entity {
   createdTimestamp: BigInt
 
   " Whether the loan has been withdrawn by supplier"
-  isWithdrawn: Boolean  
+  isWithdrawn: Boolean
 
   " The transaction hash of the loan request "
   requestLoanTxHash: Bytes
 
   " The transaction hash of the loan funding "
   fundLoanTxHash: Bytes
-  
+
   " The transaction hash of the funds withdrawal "
   withdrawFundsTxHash: Bytes
 }

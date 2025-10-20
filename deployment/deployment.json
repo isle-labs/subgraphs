@@ -3364,7 +3364,7 @@
           "methodology": "1.0.0"
         },
         "files": {
-          "template": "isle.finance.v1.template.yaml"
+          "template": "isle.finance.v1.template.2p.yaml"
         },
         "options": {
           "prepare:yaml": true,

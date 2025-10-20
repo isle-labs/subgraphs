@@ -1,7 +1,11 @@
 {
   "network": "hedera-mainnet",
-  "PoolAddressesProvider": {
+  "WurenTekPoolAddressesProvider": {
     "startBlock": 80841713,
     "address": "0x01df906f8adae8eade615c8166d3fff0d647890a"
+  },
+  "ChipRightPoolAddressesProvider": {
+    "startBlock": 84986408,
+    "address": "0x2cf98bc6025a4c9efe495851a0c84cbb53b9e0e1"
   }
 }

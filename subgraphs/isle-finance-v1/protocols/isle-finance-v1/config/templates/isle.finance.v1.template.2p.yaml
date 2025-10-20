@@ -14,9 +14,9 @@ dataSources:
     name: PoolAddressesProvider 
     network: {{ network }}
     source:
-      address: "{{ SandboxPoolAddressesProvider.address }}"
+      address: "{{ WurenTekPoolAddressesProvider.address }}"
       abi: PoolAddressesProvider
-      startBlock: {{ SandboxPoolAddressesProvider.startBlock }}
+      startBlock: {{ WurenTekPoolAddressesProvider.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -36,12 +36,12 @@ dataSources:
           handler: handleProxyCreated
       file: ./protocols/isle-finance-v1/src/mapping.ts
   - kind: ethereum/contract
-    name: WurenTekPoolAddressesProvider 
+    name: ChipRightPoolAddressesProvider 
     network: {{ network }}
     source:
-      address: "{{ WurenTekPoolAddressesProvider.address }}"
+      address: "{{ ChipRightPoolAddressesProvider.address }}"
       abi: PoolAddressesProvider
-      startBlock: {{ WurenTekPoolAddressesProvider.startBlock }}
+      startBlock: {{ ChipRightPoolAddressesProvider.startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

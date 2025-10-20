@@ -110,13 +110,41 @@ export function handleWithdrawalManagerInitialized(
 ): void {
   const withdrawalManagerContract = WithdrawalManager.bind(event.address);
   // get current config of the withdrawal manager
-  const tryGetCurrentConfig = withdrawalManagerContract.try_getCurrentConfig();
-  if (tryGetCurrentConfig.reverted) {
+  const tryLatestConfigId = withdrawalManagerContract.try_latestConfigId();
+  if (tryLatestConfigId.reverted) {
     log.error(
-      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a currentConfig",
+      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a latestConfigId",
       [event.address.toHexString()],
     );
     return;
+  }
+  let cycleDuration: i32;
+  let windowDuration: i32;
+  let initialCycleTime: i32;
+  if (tryLatestConfigId.value.toI32() == 0) {
+    const tryGetCycleConfig = withdrawalManagerContract.try_getCycleConfig(tryLatestConfigId.value);
+    if (tryGetCycleConfig.reverted) {
+      log.error(
+        "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a cycleConfig",
+        [event.address.toHexString()],
+      );
+      return;
+    }
+    cycleDuration = tryGetCycleConfig.value.cycleDuration.toI32();
+    windowDuration = tryGetCycleConfig.value.windowDuration.toI32();
+    initialCycleTime = tryGetCycleConfig.value.initialCycleTime.toI32();
+  } else {
+    const tryGetCurrentConfig = withdrawalManagerContract.try_getCurrentConfig();
+    if (tryGetCurrentConfig.reverted) {
+      log.error(
+      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a currentConfig",
+        [event.address.toHexString()],
+      );
+        return;
+    }
+    cycleDuration = tryGetCurrentConfig.value.cycleDuration.toI32();
+    windowDuration = tryGetCurrentConfig.value.windowDuration.toI32();
+    initialCycleTime = tryGetCurrentConfig.value.initialCycleTime.toI32();
   }
 
   const tryAddressesProvider =
@@ -172,22 +200,29 @@ export function handleWithdrawalManagerInitialized(
   const market = manager.getMarket();
   market._withdrawalManager = Bytes.fromHexString(event.address.toHexString());
 
-  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
-  if (tryCurrentCycleId.reverted) {
-    log.error(
-      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
-      [event.address.toHexString()],
-    );
-    return;
+  let exitCycleId: i32;
+  if (event.block.timestamp.toI32() < initialCycleTime) {
+    exitCycleId = 1;
+  } else {
+    const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
+    if (tryCurrentCycleId.reverted) {
+      log.error(
+        "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
+        [event.address.toHexString()],
+      );
+      return;
+    }
+    exitCycleId = tryCurrentCycleId.value.toI32();
   }
+  
   const configId = Bytes.fromHexString(event.address.toHexString()).concat(
-    Bytes.fromI32(tryCurrentCycleId.value.toI32()),
+    Bytes.fromI32(exitCycleId),
   );
   const exitConfig = getOrCreateExitConfigs(configId);
 
-  exitConfig.exitCycleId = tryCurrentCycleId.value.toI32();
-  exitConfig.cycleDuration = tryGetCurrentConfig.value.cycleDuration.toI32();
-  exitConfig.windowDuration = tryGetCurrentConfig.value.windowDuration.toI32();
+  exitConfig.exitCycleId = exitCycleId;
+  exitConfig.cycleDuration = cycleDuration;
+  exitConfig.windowDuration = windowDuration;
   exitConfig.save();
   market.save();
 }

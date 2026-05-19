@@ -2171,6 +2171,14 @@ type _WithdrawalRequest @entity {
   withdrawer: Bytes
 }
 
+type _ActiveWithdrawalRequest @entity {
+  " { Smart contract address of the withdrawalManager }{ Withdrawer address } "
+  id: Bytes!
+
+  " The id of the currently active _WithdrawalRequest for this account "
+  requestId: Bytes!
+}
+
 type _ExitConfigs @entity @regularPolling {
   " { Smart contract address of the withdrawalManager }{ Exit cycle ID } "
   id: Bytes!

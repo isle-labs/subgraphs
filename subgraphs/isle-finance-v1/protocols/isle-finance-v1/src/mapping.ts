@@ -5,6 +5,7 @@ import {
   Bytes,
   ethereum,
   log,
+  store,
 } from "@graphprotocol/graph-ts";
 import {
   PoolAddressesProvider,
@@ -68,6 +69,7 @@ import {
   MarketDailySnapshot,
   _Loan,
   _WithdrawalRequest,
+  _ActiveWithdrawalRequest,
   _ExitConfigs,
 } from "../../../generated/schema";
 import { ERC20 } from "../../../generated/templates/Pool/ERC20";
@@ -188,22 +190,6 @@ export function handleWithdrawalManagerInitialized(
 
 export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   const withdrawalManagerContract = WithdrawalManager.bind(event.address);
-  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
-  if (tryCurrentCycleId.reverted) {
-    log.error(
-      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
-      [event.address.toHexString()],
-    );
-    return;
-  }
-
-  // if the lockedShares is 0, then the event is triggered by normal processExit() call
-  if (event.params.lockedShares_ == BIGINT_ZERO) {
-    return;
-  }
-
-  // use windowStart current timestamp, and currentConfig to calculate the exitCycleId
-  const windowStart = event.params.windowStart_;
 
   const tryGetCurrentConfig = withdrawalManagerContract.try_getCurrentConfig();
   if (tryGetCurrentConfig.reverted) {
@@ -218,24 +204,32 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   const initialCycleTime = tryGetCurrentConfig.value.initialCycleTime;
   const cycleDuration = tryGetCurrentConfig.value.cycleDuration;
 
-  // Calculate exitCycleId
-  const exitCycleId = windowStart
+  // Derive the user's exitCycleId from windowStart in the event payload
+  const exitCycleId = event.params.windowStart_
     .minus(initialCycleTime)
     .div(cycleDuration)
     .plus(initialCycleId);
-
-  // compared with the currentCycleId + 2, if not equal, then it's a partial withdrawal
-  if (exitCycleId != tryCurrentCycleId.value.plus(BigInt.fromI32(2))) {
-    return;
-  }
 
   const exitCycleIdBytes = Bytes.fromI32(exitCycleId.toI32());
   const requestId = event.address
     .concat(exitCycleIdBytes)
     .concat(event.params.account_);
-  const request = getOrCreateWithdrawalRequest(requestId, event);
-  request.exitCycleId = tryCurrentCycleId.value.plus(BigInt.fromI32(2));
 
+  // If the active request points to a different entity, the contract has moved
+  // the locked shares to a new cycle (re-add, partial removeShares, or partial
+  // processExit). Zero the old entity's lockedShare to reflect that.
+  const activeId = event.address.concat(event.params.account_);
+  let active = _ActiveWithdrawalRequest.load(activeId);
+  if (active !== null && !active.requestId.equals(requestId)) {
+    const oldRequest = _WithdrawalRequest.load(active.requestId);
+    if (oldRequest !== null) {
+      oldRequest.lockedShare = BIGINT_ZERO;
+      oldRequest.save();
+    }
+  }
+
+  const request = getOrCreateWithdrawalRequest(requestId, event);
+  request.exitCycleId = exitCycleId;
   request.withdrawer = event.params.account_;
   request.lockedShare = event.params.lockedShares_;
 
@@ -275,6 +269,12 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   request.market = tryPool.value;
 
   request.save();
+
+  if (active === null) {
+    active = new _ActiveWithdrawalRequest(activeId);
+  }
+  active.requestId = requestId;
+  active.save();
 }
 
 export function handleWithdrawalProcessed(event: WithdrawalProcessed): void {
@@ -297,22 +297,17 @@ export function handleWithdrawalProcessed(event: WithdrawalProcessed): void {
 }
 
 export function handleWithdrawalCancelled(event: WithdrawalCancelled): void {
-  const withdrawalManagerContract = WithdrawalManager.bind(event.address);
-  const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
-  if (tryCurrentCycleId.reverted) {
-    log.error(
-      "[handleWithdrawalCancelled] WithdrawalManager contract {} does not have a currentCycleId",
-      [event.address.toHexString()],
-    );
+  const activeId = event.address.concat(event.params.account_);
+  const active = _ActiveWithdrawalRequest.load(activeId);
+  if (active === null) {
     return;
   }
-  const exitCycleIdBytes = Bytes.fromI32(tryCurrentCycleId.value.toI32());
-  const requestId = event.address
-    .concat(exitCycleIdBytes)
-    .concat(event.params.account_);
-  const request = getOrCreateWithdrawalRequest(requestId, event);
-  request.lockedShare = BIGINT_ZERO;
-  request.save();
+  const request = _WithdrawalRequest.load(active.requestId);
+  if (request !== null) {
+    request.lockedShare = BIGINT_ZERO;
+    request.save();
+  }
+  store.remove("_ActiveWithdrawalRequest", activeId.toHexString());
 }
 
 /////////////////////

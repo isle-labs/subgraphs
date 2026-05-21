@@ -798,6 +798,7 @@ export function handleLoanRequested(event: LoanRequested): void {
   loan.market = Bytes.fromHexString(tryPool.value.toHexString());
   loan.loanManager = Bytes.fromHexString(event.address.toHexString());
   loan.borrower = tryBorrower.value;
+  loan.seller = tryLoanInfo.value.seller;
   loan.gracePeriod = tryLoanInfo.value.gracePeriod;
   loan.isActive = true;
   loan.isDefaulted = false;

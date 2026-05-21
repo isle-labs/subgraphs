@@ -222,6 +222,17 @@ export class SnapshotManager {
     this.marketDailySnapshot = snapshot;
   }
 
+  // Re-write the current hour/day market snapshots and the daily financials
+  // snapshot from the latest Market/LendingProtocol state. Call this AFTER the
+  // market and protocol entities have been updated within a handler, so a day
+  // whose only event is the change itself records post-event values instead of
+  // the pre-event values captured in the constructor.
+  refreshMarketAndProtocolSnapshots(): void {
+    this.createOrUpdateMarketHourlySnapshot();
+    this.createOrUpdateMarketDailySnapshot();
+    this.createOrUpdateFinancials();
+  }
+
   createOrUpdateFinancials(): void {
     const days = this.event.block.timestamp.toI32() / SECONDS_PER_DAY;
     const id = Bytes.fromI32(days);

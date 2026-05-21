@@ -952,6 +952,10 @@ export class DataManager {
     this.protocol.totalDepositBalanceUSD = totalValueLockedUSD;
     this.protocol.totalBorrowBalanceUSD = totalBorrowBalanceUSD;
     this.protocol.save();
+
+    // Snapshots were first written in the constructor (pre-event). Re-sync them
+    // now that market + protocol reflect this event's effect.
+    this.snapshots.refreshMarketAndProtocolSnapshots();
   }
 
   updateSupplyIndex(supplyIndex: BigInt): void {

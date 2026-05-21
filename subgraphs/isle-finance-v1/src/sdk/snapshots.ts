@@ -249,8 +249,6 @@ export class SnapshotManager {
       snapshot.dailyBorrowUSD = BIGDECIMAL_ZERO;
       snapshot.dailyLiquidateUSD = BIGDECIMAL_ZERO;
       snapshot.dailyWithdrawUSD = BIGDECIMAL_ZERO;
-      snapshot.dailyLiquidateUSD = BIGDECIMAL_ZERO;
-      snapshot.dailyWithdrawUSD = BIGDECIMAL_ZERO;
       snapshot.dailyRepayUSD = BIGDECIMAL_ZERO;
       snapshot.dailyTransferUSD = BIGDECIMAL_ZERO;
       snapshot.dailyFlashloanUSD = BIGDECIMAL_ZERO;

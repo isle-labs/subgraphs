@@ -1164,9 +1164,13 @@ function updateMarketAndProtocol(
   event: ethereum.Event,
 ): void {
   const market = manager.getMarket();
-  if (!market._loanManager) {
-    log.error(
-      "[updateMarketAndProtocol] Market {} does not have a loan manager",
+  if (
+    !market._loanManager ||
+    !market._poolConfigurator ||
+    !market._withdrawalManager
+  ) {
+    log.warning(
+      "[updateMarketAndProtocol] Market {} not fully initialized yet, skipping",
       [market.id.toHexString()],
     );
     return;

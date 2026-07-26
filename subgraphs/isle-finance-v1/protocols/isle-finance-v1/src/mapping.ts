@@ -66,6 +66,7 @@ import { DataManager } from "../../../src/sdk/manager";
 import { TokenManager } from "../../../src/sdk/token";
 import { getProtocolData, INTEREST_DECIMALS, DAYS_IN_MONTH, MONTH_IN_YEAR } from "./constants";
 import {
+  Market,
   MarketDailySnapshot,
   _Loan,
   _WithdrawalRequest,
@@ -105,27 +106,13 @@ export function handleWithdrawalManagerInitialized(
   event: WithdrawalManagerInitialized,
 ): void {
   const withdrawalManagerContract = WithdrawalManager.bind(event.address);
-  // get current config of the withdrawal manager
-  const tryGetCurrentConfig = withdrawalManagerContract.try_getCurrentConfig();
-  if (tryGetCurrentConfig.reverted) {
-    log.error(
-      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a currentConfig",
-      [event.address.toHexString()],
-    );
-    return;
-  }
 
-  const tryAddressesProvider =
-    withdrawalManagerContract.try_ADDRESSES_PROVIDER();
-  if (tryAddressesProvider.reverted) {
-    log.error(
-      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have an addressesProvider",
-      [event.address.toHexString()],
-    );
-    return;
-  }
+  // This event fires exactly once per pool. Its params already carry the
+  // addresses provider and cycle/window durations — use them instead of
+  // eth_calls so a flaky RPC gets fewer chances to bail us out before
+  // market._withdrawalManager is recorded (2026-07 ChipRight incident).
   const PoolAddressesProviderContract = PoolAddressesProvider.bind(
-    tryAddressesProvider.value,
+    event.params.poolAddressesProvider_,
   );
 
   const tryGetPoolConfigurator =
@@ -133,7 +120,7 @@ export function handleWithdrawalManagerInitialized(
   if (tryGetPoolConfigurator.reverted) {
     log.error(
       "[handleWithdrawalManagerInitialized] PoolAddressesProvider contract {} does not have a poolConfigurator",
-      [tryAddressesProvider.value.toHexString()],
+      [event.params.poolAddressesProvider_.toHexString()],
     );
     return;
   }
@@ -167,11 +154,14 @@ export function handleWithdrawalManagerInitialized(
 
   const market = manager.getMarket();
   market._withdrawalManager = Bytes.fromHexString(event.address.toHexString());
+  // save immediately — a reverted call below must not lose this one-shot
+  // assignment
+  market.save();
 
   const tryCurrentCycleId = withdrawalManagerContract.try_getCurrentCycleId();
   if (tryCurrentCycleId.reverted) {
     log.error(
-      "[handleWithdrawalUpdated] WithdrawalManager contract {} does not have a currentCycleId",
+      "[handleWithdrawalManagerInitialized] WithdrawalManager contract {} does not have a currentCycleId",
       [event.address.toHexString()],
     );
     return;
@@ -182,10 +172,9 @@ export function handleWithdrawalManagerInitialized(
   const exitConfig = getOrCreateExitConfigs(configId);
 
   exitConfig.exitCycleId = tryCurrentCycleId.value.toI32();
-  exitConfig.cycleDuration = tryGetCurrentConfig.value.cycleDuration.toI32();
-  exitConfig.windowDuration = tryGetCurrentConfig.value.windowDuration.toI32();
+  exitConfig.cycleDuration = event.params.cycleDuration_.toI32();
+  exitConfig.windowDuration = event.params.windowDuration_.toI32();
   exitConfig.save();
-  market.save();
 }
 
 export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
@@ -275,6 +264,15 @@ export function handleWithdrawalUpdated(event: WithdrawalUpdated): void {
   }
   active.requestId = requestId;
   active.save();
+
+  // Backfill in case the one-shot Initialized handler missed the assignment
+  // (2026-07 ChipRight: an RPC revert there left _withdrawalManager
+  // permanently null, silencing all TVL/rate updates for the market).
+  const market = Market.load(tryPool.value);
+  if (market !== null && !market._withdrawalManager) {
+    market._withdrawalManager = Bytes.fromHexString(event.address.toHexString());
+    market.save();
+  }
 }
 
 export function handleWithdrawalProcessed(event: WithdrawalProcessed): void {
